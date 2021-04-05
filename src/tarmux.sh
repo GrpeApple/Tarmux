@@ -5,7 +5,7 @@ opt="$(getopt --options 'hV' --alternative --longoptions 'help,version' --name '
 options () {
 	while true; do
 		case "${1}" in
-			' '|'-h'|'--help')
+			'-h'|'--help')
 				usage
 				break
 				;;
@@ -31,16 +31,16 @@ options () {
 
 usage () {
 cat <<EOU
-Usage: $(basename "${0}") -[[h|-help]|[v|-version]]
+Usage: $(basename "${0}") -[[h|[-]help]|[v|[-]version]]
 Options:
-	-h	Show this help usage
+	-h	Display this help usage
 	-V	Display version and information
 EOU
 }
 
 version () {
 	cat <<-EOV
-		Tarmux v0.0.3
+		Tarmux v0.0.3.1
 	EOV
 }
 

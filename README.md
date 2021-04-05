@@ -52,17 +52,34 @@ apt autoremove make
 
 ## Usage
 
+You can use `-some-long-option` or `-some-long` and it will still work.
+
 <table>
 <thead>
 	<tr>
 		<th>Option</th>
+		<th>Long option</th>
 		<th>Description</th>
 	</tr>
 </thead>
 <tbody>
 	<tr>
-		<td></td>
-		<td></td>
+		<td>
+			<code>-h</code>
+		</td>
+		<td>
+			<code>--help</code>
+		</td>
+		<td>Display help message</td>
+	</tr>
+	<tr>
+		<td>
+			<code>-V</code>
+		</td>
+		<td>
+			<code>--version</code>
+		</td>
+		<td>Display version and information</td>
 	</tr>
 </tbody>
 </table>
