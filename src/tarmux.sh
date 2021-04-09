@@ -33,8 +33,8 @@ usage () {
 cat <<EOU
 Usage: $(basename "${0}") -[[h|[-]help]|[v|[-]version]]
 Options:
-	-h	Display this help usage
-	-V	Display version and information
+	-h|-help	Display this help usage
+	-V|-version	Display version and information
 EOU
 }
 
