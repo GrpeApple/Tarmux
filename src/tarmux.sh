@@ -37,7 +37,7 @@ options () {
 
 usage () {
 cat <<EOU
-Usage: $(basename "${0}") -[[h|[-]help]|[v|[-]version]]
+Usage: $(basename "${0}") -[[h|[-]help]|[c|[-]configure]|[v|[-]version]]
 Options:
 	-h|-help	Display this help usage
 	-c|-configure	Configure

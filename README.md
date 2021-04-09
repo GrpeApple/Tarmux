@@ -18,9 +18,9 @@ apt install make -y
 ### Installing
 
 ```bash
-./install.sh
 make build
 make install
+tarmux -c # Select installation
 ```
 
 
@@ -34,7 +34,7 @@ You must install [`make`](#install-make)
 
 
 ```bash
-./uninstall.sh
+tarmux -c # Select uninstallation
 make clean
 make uninstall
 ```
@@ -71,6 +71,15 @@ You can use `-some-long-option` or `-some-long` and it will still work.
 			<code>--help</code>
 		</td>
 		<td>Display help message</td>
+	</tr>
+	<tr>
+		<td>
+			<code>-c</code>
+		</td>
+		<td>
+			<code>--configure</code>
+		</td>
+		<td>Configure and install, uninstall packages</td>
 	</tr>
 	<tr>
 		<td>
