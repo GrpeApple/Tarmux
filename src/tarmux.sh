@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.1.0'
+VERSION='v0.1.0.1'
 
 declare -A color=(
 	['RED']='\e[0;31m'
