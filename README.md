@@ -54,6 +54,145 @@ There is a config (`CONFIG_DIR` (default: `/data/data/com.termux/files/home/.con
 
 You are responsible for your actions of adding dangerous stuff to your config file. (It uses `source` so it will run commands like `rm -rf *` if added to the config file)
 
+
+Some actions are self-explanatory and are not explained in this table.
+
+You are to configure with `tarmux -c`.
+
+------
+<table>
+<thead>
+	<tr>
+		<th>Action</th>
+		<th>Description</th>
+		<th>Configuration</th>
+	</tr>
+</thead>
+<tbody>
+	<tr>
+		<td>
+			<code>install</code>
+		</td>
+		<td>Install packages for backing up and restoring.</td>
+		<td>
+			Packages
+			<ul>
+				<li>
+					<code>tar</code>
+				</li>
+				<li>
+					<code>pigz</code>
+				</li>
+				<li>
+					<code>zstd</code>
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<code>uninstall</code>
+		</td>
+		<td>Uninstall packages for backing up and restoring.</td>
+		<td>
+			Packages
+			<ul>
+				<li>
+					<code>tar</code>
+				</li>
+				<li>
+					<code>pigz</code>
+				</li>
+				<li>
+					<code>zstd</code>
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<code>tarmux</code>
+		</td>
+		<td>
+			The real configuration of <code>tarmux</code> starts here.
+		</td>
+		<td>
+			<table>
+			<thead>
+				<tr>
+					<th>Configuration</th>
+					<th>Description</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>
+						<code>Installation directory</code>
+					</td>
+					<td>
+						Location of where `tarmux` lives at, once you run `tarmux` you have to configure so as to move it to a different location (You can also <code>reset</code> it and move it; this will be explained in another row).
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<code>Backup data directory</code>
+					</td>
+					<td>Location of your backups.</td>
+				</tr>
+				<tr>
+					<td>
+						<code>Backup name</code>
+					</td>
+					<td>
+						Name of your backups, since this also has <code>date</code> within, you can use control characters (the list of it is in <code>man date</code> or any other help page) to add the date of your backup.
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<code>Backup extension</code>
+					</td>
+					<td>Self-explanatory; extension of your backup filename.</td>
+				</tr>
+				<tr>
+					<td>
+						<code>Backup root directory</code>
+					</td>
+					<td>
+						Location of where your termux backup directories.
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<code>Backup directories</code>
+					</td>
+					<td>
+						Your <code>tarmux</code> backup directories.<br>
+						On how to separate them is explained on another row.
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<code>Backup directories separator</code>
+					</td>
+					<td>
+						Backup directory separator<br>
+						For example:<br>
+						<code>home[separator]usr</code>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<code>reset</code>
+					</td>
+					<td>Self-explanatory; reset your config file to the defaults.</td>
+				</tr>
+			</tbody>
+			</table>
+		</td>
+	</tr>
+</tbody>
+</table>
+
 -----
 ### Options
 
@@ -69,6 +208,15 @@ You can use `-some-long-option` or `-some-long` and it will still work.
 	</tr>
 </thead>
 <tbody>
+	<tr>
+		<td>
+			<code></code>
+		</td>
+		<td>
+			<code></code>
+		</td>
+		<td>Display help message</td>
+	</tr>
 	<tr>
 		<td>
 			<code>-h</code>
