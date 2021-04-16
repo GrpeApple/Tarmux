@@ -137,6 +137,14 @@ You are to configure with `tarmux -c`.
 				</tr>
 				<tr>
 					<td>
+						<code>Backup root directory</code>
+					</td>
+					<td>
+						Location of where your termux backup directories.
+					</td>
+				</tr>
+				<tr>
+					<td>
 						<code>Backup data directory</code>
 					</td>
 					<td>Location of your backups.</td>
@@ -154,14 +162,6 @@ You are to configure with `tarmux -c`.
 						<code>Backup extension</code>
 					</td>
 					<td>Self-explanatory; extension of your backup filename.</td>
-				</tr>
-				<tr>
-					<td>
-						<code>Backup root directory</code>
-					</td>
-					<td>
-						Location of where your termux backup directories.
-					</td>
 				</tr>
 				<tr>
 					<td>

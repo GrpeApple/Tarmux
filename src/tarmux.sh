@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.2.1.3'
+VERSION='v0.2.2'
 
 # Colors
 ## Prefixes
@@ -29,10 +29,10 @@ esac
 ## tarmux preferences
 declare -A config=(
 	['INSTALL']="$(realpath "${0:-./tarmux}")"
+	['BACKUP_ROOT']='/data/data/com.termux/files'
 	['BACKUP_DATA']='/storage/emulated/0/Download'
 	['BACKUP_NAME']='termux_backup_%Y-%m-%d_%H-%M-%S-%N'
 	['BACKUP_EXT']='.bak'
-	['BACKUP_ROOT']='/data/data/com.termux/files'
 	['BACKUP_LIST']='home|usr'
 	['BACKUP_IFS']='|'
 	['REQUEST_STORAGE']='1'
@@ -74,7 +74,7 @@ ACTIONS=('install' 'uninstall' 'tarmux')
 ### Packages
 PACKAGES=('tar' 'pigz' 'zstd')
 ## Configuration for tarmux
-CONFIGURATIONS=('Installation directory' 'Backup data directory' 'Backup name' 'Backup extension' 'Backup root directory' 'Backup directories' 'Backup directories separator' 'Always ask storage permission' 'reset')
+CONFIGURATIONS=('Installation directory' 'Backup root directory' 'Backup data directory' 'Backup name' 'Backup extension' 'Backup directories' 'Backup directories separator' 'Always ask storage permission' 'reset')
 
 save_config () {
 	cat > "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" <<-EOC
@@ -278,6 +278,57 @@ configure () {
 						break 1
 						;;
 
+					'Backup root directory',*|*,'Backup root directory')
+						while true; do
+							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'explorer',*|*,'explorer')
+										cd "${config['BACKUP_ROOT']}" &>/dev/null
+										while true; do
+											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
+											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
+												case "${directory},${REPLY}" in
+													'select',*|*,'select')
+														local BACKUP_ROOT="${PWD}"
+														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup root directory '${config['BACKUP_ROOT']}' to '${BACKUP_ROOT:-${config['BACKUP_ROOT']}}'..."
+														config['BACKUP_ROOT']="${BACKUP_ROOT:-${config['BACKUP_ROOT']}}"
+														save_config &&
+														printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+														break 1
+														;;
+
+													'clear',*|*,'clear') clear; break 1;;
+													'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup root directory explorer configuration...'; break 2;;
+													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
+													'./..',*|*,'./..') cd ..; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}"; break 1;;
+												esac
+											done
+										done
+										cd "${CWD}" &>/dev/null
+										break 1
+										;;
+
+									'manual',*|*,'manual')
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Where? ('${config['BACKUP_ROOT']}'): "
+										read -r -e BACKUP_ROOT
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup root directory '${config['BACKUP_ROOT']}' to '${BACKUP_ROOT:-${config['BACKUP_ROOT']}}'..."
+										config['BACKUP_ROOT']="${BACKUP_ROOT:-${config['BACKUP_ROOT']}}"
+										save_config &&
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_ROOT']}'"; break 1;;
+									'clear',*|*,'clear') clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup root directory configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
 					'Backup data directory',*|*,'Backup data directory')
 						while true; do
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
@@ -370,57 +421,6 @@ configure () {
 									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_EXT']}'"; break 1;;
 									'clear',*|*,'clear') clear; break 1;;
 									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup extension configuration...'; break 2;;
-									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
-								esac
-							done
-						done
-						break 1
-						;;
-
-					'Backup root directory',*|*,'Backup root directory')
-						while true; do
-							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
-								case "${option},${REPLY}" in
-									'explorer',*|*,'explorer')
-										cd "${config['BACKUP_ROOT']}" &>/dev/null
-										while true; do
-											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
-											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
-												case "${directory},${REPLY}" in
-													'select',*|*,'select')
-														local BACKUP_ROOT="${PWD}"
-														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup root directory '${config['BACKUP_ROOT']}' to '${BACKUP_ROOT:-${config['BACKUP_ROOT']}}'..."
-														config['BACKUP_ROOT']="${BACKUP_ROOT:-${config['BACKUP_ROOT']}}"
-														save_config &&
-														printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
-														break 1
-														;;
-
-													'clear',*|*,'clear') clear; break 1;;
-													'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup root directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
-													'./..',*|*,'./..') cd ..; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}"; break 1;;
-												esac
-											done
-										done
-										cd "${CWD}" &>/dev/null
-										break 1
-										;;
-
-									'manual',*|*,'manual')
-										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Where? ('${config['BACKUP_ROOT']}'): "
-										read -r -e BACKUP_ROOT
-										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup root directory '${config['BACKUP_ROOT']}' to '${BACKUP_ROOT:-${config['BACKUP_ROOT']}}'..."
-										config['BACKUP_ROOT']="${BACKUP_ROOT:-${config['BACKUP_ROOT']}}"
-										save_config &&
-										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
-										break 1
-										;;
-
-									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_ROOT']}'"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
-									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup root directory configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
