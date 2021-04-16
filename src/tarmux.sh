@@ -21,7 +21,7 @@
 ########################################################################################################
 
 
-VERSION='v0.2.1'
+VERSION='v0.2.1.1'
 
 # Colors
 ## Prefixes
@@ -39,6 +39,13 @@ declare -A color=(
 	['KBLACK']='\e[40m'
 	['RESET']='\e[0m'
 )
+
+# Check shell options
+case "${-}" in
+	*'r'*) printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: bash in restricted mode.' >&2;;
+	*'p'*) printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: bash in POSIX mode.' >&2;;
+esac
+
 # Configuration
 ## tarmux preferences
 declare -A config=(

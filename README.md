@@ -1,6 +1,8 @@
 # Tarmux
 Backup files on Termux with `tar`
 
+Issues may occur on Bash POSIX or Restricted mode when setting `bash -p` or `bash -r` respectively.
+
 ---
 
 ## Installation
