@@ -21,7 +21,7 @@
 ########################################################################################################
 
 
-VERSION='v0.2.1.1'
+VERSION='v0.2.1.2'
 
 # Colors
 ## Prefixes
@@ -250,7 +250,7 @@ configure () {
 									'explorer',*|*,'explorer')
 										cd "$(dirname "${config['INSTALL']}")" &>/dev/null
 										while true; do
-											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
+											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
@@ -306,11 +306,11 @@ configure () {
 									'explorer',*|*,'explorer')
 										cd "${config['BACKUP_DATA']}" &>/dev/null
 										while true; do
-											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
+											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
-														BACKUP_DATA="${PWD}"
+														local BACKUP_DATA="${PWD}"
 														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup data directory '${config['BACKUP_DATA']}' to '${BACKUP_DATA:-${config['BACKUP_DATA']}}'..."
 														config['BACKUP_DATA']="${BACKUP_DATA:-${config['BACKUP_DATA']}}"
 														save_config &&
@@ -405,11 +405,11 @@ configure () {
 									'explorer',*|*,'explorer')
 										cd "${config['BACKUP_ROOT']}" &>/dev/null
 										while true; do
-											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
+											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
-														BACKUP_ROOT="${PWD}"
+														local BACKUP_ROOT="${PWD}"
 														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup root directory '${config['BACKUP_ROOT']}' to '${BACKUP_ROOT:-${config['BACKUP_ROOT']}}'..."
 														config['BACKUP_ROOT']="${BACKUP_ROOT:-${config['BACKUP_ROOT']}}"
 														save_config &&
