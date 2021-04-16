@@ -1,27 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-########################################################################################################
-# bash refreshments (not necessary)
-
-## If you see a ':-' or ':+' in a variable:
-### ':-' Replace if empty.
-### ':+' Replace if not empty.
-
-## If you see a '&&' or '||':
-### '&&'; Do something if the command before it exits successfully.
-### '||'; Do something if the command before it exits unsuccessfully.
-
-## If you see a ',*|*,' in a case statement; enables choosing the name of an option not only the number.
-
-## 'break' has levels, for example if a while loop inside a while loop exists:
-### 'break' or 'break 1' breaks the last while loop
-### 'break 2' breaks the last 2 while loops
-### This is also the same for 'continue'.
-
-########################################################################################################
-
-
-VERSION='v0.2.1.2'
+VERSION='v0.2.1.3'
 
 # Colors
 ## Prefixes
