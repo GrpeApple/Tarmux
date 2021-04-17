@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.0'
+VERSION='v0.3.0.1'
 
 # Colors
 ## Prefixes
@@ -21,8 +21,8 @@ declare -A color=(
 
 # Check shell options
 case "${-}" in
-	*'r'*) printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: bash in restricted mode.' >&2;;
-	*'p'*) printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: bash in POSIX mode.' >&2;;
+	*'r'*) printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: shell in restricted mode.' >&2;;
+	*'p'*) printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: shell in POSIX mode.' >&2;;
 esac
 
 # Configuration
