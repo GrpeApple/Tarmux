@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.2.2'
+VERSION='v0.3.0'
 
 # Colors
 ## Prefixes
@@ -29,13 +29,20 @@ esac
 ## tarmux preferences
 declare -A config=(
 	['INSTALL']="$(realpath "${0:-./tarmux}")"
-	['BACKUP_ROOT']='/data/data/com.termux/files'
-	['BACKUP_DATA']='/storage/emulated/0/Download'
-	['BACKUP_NAME']='termux_backup_%Y-%m-%d_%H-%M-%S-%N'
-	['BACKUP_EXT']='.bak'
-	['BACKUP_LIST']='home|usr'
-	['BACKUP_IFS']='|'
+	['BACKUP_TOOL']='tar'
+	['BACKUP_OPTIONS']='-z'
+	['BACKUP_ENV']=''
+	['RESTORE_TOOL']='tar'
+	['RESTORE_OPTIONS']='-z'
+	['BACKUP_ENV']=''
+	['TARMUX_ROOT']='/data/data/com.termux/files'
+	['TARMUX_DATA']='/storage/emulated/0/Download'
+	['TARMUX_NAME']='termux_backup_%Y-%m-%d_%H-%M-%S-%N'
+	['TARMUX_EXT']='.bak'
+	['TARMUX_LIST']='home|usr'
+	['TARMUX_IFS']='|'
 	['REQUEST_STORAGE']='1'
+	['ALWAYS_SAVE']='1'
 )
 
 ## Config location
@@ -74,7 +81,11 @@ ACTIONS=('install' 'uninstall' 'tarmux')
 ### Packages
 PACKAGES=('tar' 'pigz' 'zstd')
 ## Configuration for tarmux
-CONFIGURATIONS=('Installation directory' 'Backup root directory' 'Backup data directory' 'Backup name' 'Backup extension' 'Backup directories' 'Backup directories separator' 'Always ask storage permission' 'reset')
+CONFIGURATIONS=('Installation directory' 'Backup' 'Restore' 'tarmux backup root directory' 'tarmux backup data directory' 'tarmux backup name' 'tarmux backup extension' 'tarmux backup directories' 'tarmux backup directories separator' 'Always ask storage permission' 'Always save config' 'save' 'reset')
+BACKUP_CONFIGURATIONS=('Backup tool' 'Backup options' 'Backup environmental variables')
+RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environmental variables')
+BACKUP_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
+RESTORE_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
 
 save_config () {
 	cat > "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" <<-EOC
@@ -133,7 +144,7 @@ configure () {
 	## Installation
 	installPkg () {
 		while true; do
-			select package in 'update' 'upgrade' 'repository' "${PACKAGES[@]}" 'clear' 'exit'; do
+			select package in 'update' 'upgrade' 'repository' 'manual' "${PACKAGES[@]}" 'clear' 'exit'; do
 				case "${package},${REPLY}" in
 					'update',*|*,'update')
 						printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" 'Updating apt...'
@@ -152,6 +163,14 @@ configure () {
 					'repository',*|*,'repository')
 						printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing Termux's repositories..."
 						termux-change-repo &&
+						printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+						break 1
+						;;
+
+					'manual',*|*,'manual')
+						printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" 'Package to install? (): '
+						read -r -e package
+						apt install ${package} &&
 						printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 						break 1
 						;;
@@ -177,7 +196,7 @@ configure () {
 						break 1
 						;;
 
-					'clear',*|*,'clear') clear; break 1;;
+					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting installation...'; break 2;;
 					*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 				esac
@@ -187,8 +206,16 @@ configure () {
 	## Uninstallation
 	uninstallPkg () {
 		while true; do
-			select package in "${PACKAGES[@]}" 'clear' 'exit'; do
+			select package in 'manual' "${PACKAGES[@]}" 'clear' 'exit'; do
 				case "${package},${REPLY}" in
+					'manual',*|*,'manual')
+						printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" 'Package to uninstall? (): '
+						read -r -e package
+						apt autoremove ${package} &&
+						printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+						break 1
+						;;
+
 					'tar',*|*,'tar')
 						printf "${color['BRED']}%s\n${color['RESET']}" 'Uninstalling tar (dangerous)...'
 						apt autoremove tar &&
@@ -210,8 +237,232 @@ configure () {
 						break 1
 						;;
 
-					'clear',*|*,'clear') clear; break 1;;
+					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting uninstallation...'; break 2;;
+					*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+				esac
+			done
+		done
+	}
+	## Backup configuration
+	backupConf () {
+		while true; do
+			select configuration in "${BACKUP_CONFIGURATIONS[@]}" 'clear' 'exit'; do
+				case "${configuration},${REPLY}" in
+					'Backup tool',*|*,'Backup tool')
+						while true; do
+							select tool in 'manual' "${BACKUP_TOOLS[@]}" 'view' 'clear' 'exit'; do
+								case "${tool},${REPLY}" in
+									'manual',*|*,'manual')
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Backup tool to use? ('${config['BACKUP_TOOL']}'): "
+										read -r -e BACKUP_TOOL
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup tool '${config['BACKUP_TOOL']}' to '${BACKUP_TOOL:-${config['BACKUP_TOOL']}}'..."
+										config['BACKUP_TOOL']="${BACKUP_TOOL:-${config['BACKUP_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'tar',*|*,'tar')
+										local BACKUP_TOOL='tar'
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup tool '${config['BACKUP_TOOL']}' to '${BACKUP_TOOL:-${config['BACKUP_TOOL']}}'..."
+										config['BACKUP_TOOL']="${BACKUP_TOOL:-${config['BACKUP_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'tar (pigz)',*|*,'tar (pigz)')
+										local BACKUP_TOOL='tar (pigz)'
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup tool '${config['BACKUP_TOOL']}' to '${BACKUP_TOOL:-${config['BACKUP_TOOL']}}'..."
+										config['BACKUP_TOOL']="${BACKUP_TOOL:-${config['BACKUP_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'tar (zstd)',*|*,'tar (zstd)')
+										local BACKUP_TOOL='tar (zstd)'
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup tool '${config['BACKUP_TOOL']}' to '${BACKUP_TOOL:-${config['BACKUP_TOOL']}}'..."
+										config['BACKUP_TOOL']="${BACKUP_TOOL:-${config['BACKUP_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_TOOL']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup tool configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Backup options',*|*,'Backup options')
+						while true; do
+							select option in 'change' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'change',*|*,'change')
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "What backup options? ('${config['BACKUP_OPTIONS']}'): "
+										read -r -e BACKUP_OPTIONS
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup options '${config['BACKUP_OPTIONS']}' to '${BACKUP_OPTIONS-${config['BACKUP_OPTIONS']}}'..."
+										config['BACKUP_OPTIONS']="${BACKUP_OPTIONS-${config['BACKUP_OPTIONS']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_OPTIONS']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup options configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Backup environmental variables',*|*,'Backup environmental variables')
+						printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: This uses eval, and your security will suffer.' >&2
+						while true; do
+							select option in 'change' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'change',*|*,'change')
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "What backup environmental variables? ('${config['BACKUP_ENV']}'): "
+										read -r -e BACKUP_ENV
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup enviornmental variables '${config['BACKUP_ENV']}' to '${BACKUP_ENV-${config['BACKUP_ENV']}}'..."
+										config['BACKUP_ENV']="${BACKUP_ENV-${config['BACKUP_ENV']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_ENV']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup environmental variables configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'clear',*|*,'clear'|*,) clear; break 1;;
+					'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup configuration...'; break 2;;
+					*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+				esac
+			done
+		done
+	}
+	## Restore configuration
+	restoreConf () {
+		while true; do
+			select configuration in "${RESTORE_CONFIGURATIONS[@]}" 'clear' 'exit'; do
+				case "${configuration},${REPLY}" in
+					'Restore tool',*|*,'Restore tool')
+						while true; do
+							select tool in 'manual' "${RESTORE_TOOLS[@]}" 'view' 'clear' 'exit'; do
+								case "${tool},${REPLY}" in
+									'manual',*|*,'manual')
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Restore tool to use? ('${config['RESTORE_TOOL']}'): "
+										read -r -e RESTORE_TOOL
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing restore tool '${config['RESTORE_TOOL']}' to '${RESTORE_TOOL:-${config['RESTORE_TOOL']}}'..."
+										config['RESTORE_TOOL']="${RESTORE_TOOL:-${config['RESTORE_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'tar',*|*,'tar')
+										local RESTORE_TOOL='tar'
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing restore tool '${config['RESTORE_TOOL']}' to '${RESTORE_TOOL:-${config['RESTORE_TOOL']}}'..."
+										config['RESTORE_TOOL']="${RESTORE_TOOL:-${config['RESTORE_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'tar (pigz)',*|*,'tar (pigz)')
+										local RESTORE_TOOL='tar (pigz)'
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing restore tool '${config['RESTORE_TOOL']}' to '${RESTORE_TOOL:-${config['RESTORE_TOOL']}}'..."
+										config['RESTORE_TOOL']="${RESTORE_TOOL:-${config['RESTORE_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'tar (zstd)',*|*,'tar (zstd)')
+										local RESTORE_TOOL='tar (zstd)'
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing restore tool '${config['RESTORE_TOOL']}' to '${RESTORE_TOOL:-${config['RESTORE_TOOL']}}'..."
+										config['RESTORE_TOOL']="${RESTORE_TOOL:-${config['RESTORE_TOOL']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['RESTORE_TOOL']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting restore tool configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Restore options',*|*,'Restore options')
+						while true; do
+							select option in 'change' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'change',*|*,'change')
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "What options? ('${config['RESTORE_OPTIONS']}'): "
+										read -r -e RESTORE_OPTIONS
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing restore options '${config['RESTORE_OPTIONS']}' to '${RESTORE_OPTIONS-${config['RESTORE_OPTIONS']}}'..."
+										config['RESTORE_OPTIONS']="${RESTORE_OPTIONS-${config['RESTORE_OPTIONS']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['RESTORE_OPTIONS']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting restore options configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Restore environmental variables',*|*,'Restore environmental variables')
+						printf "${color['BYELLOW']}%s\n${color['RESET']}" 'WARNING: This uses eval, and your security will suffer.' >&2
+						while true; do
+							select option in 'change' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'change',*|*,'change')
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "What restore environmental variables? ('${config['RESTORE_ENV']}'): "
+										read -r -e RESTORE_ENV
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing restore enviornmental variables '${config['RESTORE_ENV']}' to '${RESTORE_ENV-${config['RESTORE_ENV']}}'..."
+										config['RESTORE_ENV']="${RESTORE_ENV-${config['RESTORE_ENV']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['RESTORE_ENV']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting restore environmental variables configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'clear',*|*,'clear'|*,) clear; break 1;;
+					'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting restore configuration...'; break 2;;
 					*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 				esac
 			done
@@ -239,12 +490,12 @@ configure () {
 														### Do not treat INSTALL as moving to a directory; Always be a file.
 														mv --interactive --no-target-directory "${config['INSTALL']}" "${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}" || exit 1
 														config['INSTALL']="${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}"
-														save_config &&
+														test -n "${config['ALWAYS_SAVE']}" && save_config
 														printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 														break 1
 														;;
 
-													'clear',*|*,'clear') clear; break 1;;
+													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting installation directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
 													'./..',*|*,'./..') cd ..; break 1;;
@@ -263,13 +514,13 @@ configure () {
 										## Do not treat INSTALL as moving to a directory; Always be a file.
 										mv --interactive --no-target-directory "${config['INSTALL']}" "${INSTALL:-${config['INSTALL']}}" || exit 1
 										config['INSTALL']="${INSTALL:-${config['INSTALL']}}"
-										save_config &&
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
 									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['INSTALL']}'"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting installation directory configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
@@ -278,27 +529,29 @@ configure () {
 						break 1
 						;;
 
-					'Backup root directory',*|*,'Backup root directory')
+					'Backup',*|*,'Backup') backupConf; break 1;;
+					'Restore',*|*,'Restore') restoreConf; break 1;;
+					'tarmux backup root directory',*|*,'tarmux backup root directory')
 						while true; do
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "${config['BACKUP_ROOT']}" &>/dev/null
+										cd "${config['TARMUX_ROOT']}" &>/dev/null
 										while true; do
 											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
-														local BACKUP_ROOT="${PWD}"
-														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup root directory '${config['BACKUP_ROOT']}' to '${BACKUP_ROOT:-${config['BACKUP_ROOT']}}'..."
-														config['BACKUP_ROOT']="${BACKUP_ROOT:-${config['BACKUP_ROOT']}}"
-														save_config &&
+														local TARMUX_ROOT="${PWD}"
+														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving tarmux backup root directory '${config['TARMUX_ROOT']}' to '${TARMUX_ROOT:-${config['TARMUX_ROOT']}}'..."
+														config['TARMUX_ROOT']="${TARMUX_ROOT:-${config['TARMUX_ROOT']}}"
+														test -n "${config['ALWAYS_SAVE']}" && save_config
 														printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 														break 1
 														;;
 
-													'clear',*|*,'clear') clear; break 1;;
-													'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup root directory explorer configuration...'; break 2;;
+													'clear',*|*,'clear'|*,) clear; break 1;;
+													'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup root directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
 													'./..',*|*,'./..') cd ..; break 1;;
 													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}"; break 1;;
@@ -310,18 +563,18 @@ configure () {
 										;;
 
 									'manual',*|*,'manual')
-										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Where? ('${config['BACKUP_ROOT']}'): "
-										read -r -e BACKUP_ROOT
-										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup root directory '${config['BACKUP_ROOT']}' to '${BACKUP_ROOT:-${config['BACKUP_ROOT']}}'..."
-										config['BACKUP_ROOT']="${BACKUP_ROOT:-${config['BACKUP_ROOT']}}"
-										save_config &&
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Where? ('${config['TARMUX_ROOT']}'): "
+										read -r -e TARMUX_ROOT
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving tarmux backup root directory '${config['TARMUX_ROOT']}' to '${TARMUX_ROOT:-${config['TARMUX_ROOT']}}'..."
+										config['TARMUX_ROOT']="${TARMUX_ROOT:-${config['TARMUX_ROOT']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_ROOT']}'"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
-									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup root directory configuration...'; break 2;;
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['TARMUX_ROOT']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup root directory configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
@@ -329,27 +582,27 @@ configure () {
 						break 1
 						;;
 
-					'Backup data directory',*|*,'Backup data directory')
+					'tarmux backup data directory',*|*,'tarmux backup data directory')
 						while true; do
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "${config['BACKUP_DATA']}" &>/dev/null
+										cd "${config['TARMUX_DATA']}" &>/dev/null
 										while true; do
 											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
-														local BACKUP_DATA="${PWD}"
-														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup data directory '${config['BACKUP_DATA']}' to '${BACKUP_DATA:-${config['BACKUP_DATA']}}'..."
-														config['BACKUP_DATA']="${BACKUP_DATA:-${config['BACKUP_DATA']}}"
-														save_config &&
+														local TARMUX_DATA="${PWD}"
+														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving tarmux backup data directory '${config['TARMUX_DATA']}' to '${TARMUX_DATA:-${config['TARMUX_DATA']}}'..."
+														config['TARMUX_DATA']="${TARMUX_DATA:-${config['TARMUX_DATA']}}"
+														test -n "${config['ALWAYS_SAVE']}" && save_config
 														printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 														break 1
 														;;
 
-													'clear',*|*,'clear') clear; break 1;;
-													'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup data directory explorer configuration...'; break 2;;
+													'clear',*|*,'clear'|*,) clear; break 1;;
+													'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
 													'./..',*|*,'./..') cd ..; break 1;;
 													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}"; break 1;;
@@ -361,18 +614,18 @@ configure () {
 										;;
 
 									'manual',*|*,'manual')
-										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Where? ('${config['BACKUP_DATA']}'): "
-										read -r -e BACKUP_DATA
-										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving backup data directory '${config['BACKUP_DATA']}' to '${BACKUP_DATA:-${config['BACKUP_DATA']}}'..."
-										config['BACKUP_DATA']="${BACKUP_DATA:-${config['BACKUP_DATA']}}"
-										save_config &&
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Where? ('${config['TARMUX_DATA']}'): "
+										read -r -e TARMUX_DATA
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving tarmux backup data directory '${config['TARMUX_DATA']}' to '${TARMUX_DATA:-${config['TARMUX_DATA']}}'..."
+										config['TARMUX_DATA']="${TARMUX_DATA:-${config['TARMUX_DATA']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_DATA']}'"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
-									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup data directory configuration...'; break 2;;
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['TARMUX_DATA']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup data directory configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
@@ -380,23 +633,23 @@ configure () {
 						break 1
 						;;
 
-					'Backup name',*|*,'Backup name')
+					'tarmux backup name',*|*,'tarmux backup name')
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Backup name? You can also include date formats like '%Y-%m-%d' ('${config['BACKUP_NAME']}'): "
-										read -r -e BACKUP_NAME
-										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup name '${config['BACKUP_NAME']}' to '${BACKUP_NAME:-${config['BACKUP_NAME']}}'..."
-										config['BACKUP_NAME']="${BACKUP_NAME:-${config['BACKUP_NAME']}}"
-										save_config &&
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Backup name? You can also include date formats like '%Y-%m-%d' ('${config['TARMUX_NAME']}'): "
+										read -r -e TARMUX_NAME
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing tarmux backup name '${config['TARMUX_NAME']}' to '${TARMUX_NAME:-${config['TARMUX_NAME']}}'..."
+										config['TARMUX_NAME']="${TARMUX_NAME:-${config['TARMUX_NAME']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_NAME']}'"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
-									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup name configuration...'; break 2;;
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['TARMUX_NAME']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup name configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
@@ -404,23 +657,23 @@ configure () {
 						break 1
 						;;
 
-					'Backup extension',*|*,'Backup extension')
+					'tarmux backup extension',*|*,'tarmux backup extension')
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Backup extension? ('${config['BACKUP_EXT']}'): "
-										read -r -e BACKUP_EXT
-										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup extension '${config['BACKUP_EXT']}' to '${BACKUP_EXT:-${config['BACKUP_EXT']}}'..."
-										config['BACKUP_EXT']="${BACKUP_EXT:-${config['BACKUP_EXT']}}"
-										save_config &&
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Backup extension? ('${config['TARMUX_EXT']}'): "
+										read -r -e TARMUX_EXT
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing tarmux backup extension '${config['TARMUX_EXT']}' to '${TARMUX_EXT-${config['TARMUX_EXT']}}'..."
+										config['TARMUX_EXT']="${TARMUX_EXT-${config['TARMUX_EXT']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_EXT']}'"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
-									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup extension configuration...'; break 2;;
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['TARMUX_EXT']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup extension configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
@@ -428,23 +681,23 @@ configure () {
 						break 1
 						;;
 
-					'Backup directories',*|*,'Backup directories')
+					'tarmux backup directories',*|*,'tarmux backup directories')
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "What backup directories? Must be separated with '${config['BACKUP_IFS']}' ('${config['BACKUP_LIST']}'): "
-										read -r -e BACKUP_LIST
-										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing backup directories '${config['BACKUP_LIST']}' to '${BACKUP_LIST:-${config['BACKUP_LIST']}}'..."
-										config['BACKUP_LIST']="${BACKUP_LIST:-${config['BACKUP_LIST']}}"
-										save_config &&
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "What tarmux backup directories? Must be separated with '${config['TARMUX_IFS']}' ('${config['TARMUX_LIST']}'): "
+										read -r -e TARMUX_LIST
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing tarmux backup directories '${config['TARMUX_LIST']}' to '${TARMUX_LIST:-${config['TARMUX_LIST']}}'..."
+										config['TARMUX_LIST']="${TARMUX_LIST:-${config['TARMUX_LIST']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
 									'view',*|*,'view')
 										printf "${color['BCYAN']}%s\n${color['RESET']}${color['BWHITE']}${color['KBLACK']}" "Current: "
-										IFS="${config['BACKUP_IFS']}" read -r -a backup_directories <<< "${config['BACKUP_LIST']}"
+										IFS="${config['TARMUX_IFS']}" read -r -a backup_directories <<< "${config['TARMUX_LIST']}"
 										for i in "${backup_directories[@]}"; do
 											printf "\t'%s'\n" "${i}"
 										done
@@ -452,8 +705,8 @@ configure () {
 										break 1
 										;;
 
-									'clear',*|*,'clear') clear; break 1;;
-									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup directories configuration...'; break 2;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup directories configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
@@ -461,23 +714,23 @@ configure () {
 						break 1
 						;;
 
-					'Backup directories separator',*|*,'Backup directories separator')
+					'tarmux backup directories separator',*|*,'tarmux backup directories separator')
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Directory Separator ('${config['BACKUP_IFS']}'): "
-										read -r -e BACKUP_IFS
-										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing Backup directory separator'${config['BACKUP_IFS']}' to '${BACKUP_IFS:-${config['BACKUP_IFS']}}'..."
-										config['BACKUP_IFS']="${BACKUP_IFS:-${config['BACKUP_IFS']}}"
-										save_config &&
+										printf "${color['BWHITE']}${color['KBLACK']}%s${color['RESET']}" "Directory Separator ('${config['TARMUX_IFS']}'): "
+										read -r -e TARMUX_IFS
+										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Changing tarmux backup directories separator '${config['TARMUX_IFS']}' to '${TARMUX_IFS-${config['TARMUX_IFS']}}'..."
+										config['TARMUX_IFS']="${TARMUX_IFS-${config['TARMUX_IFS']}}"
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['BACKUP_IFS']}'"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
-									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting backup directories separator configuration...'; break 2;;
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: '${config['TARMUX_IFS']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux backup directories separator configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
@@ -492,7 +745,7 @@ configure () {
 									'enable',*|*,'enable')
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Enabling...'
 										config['REQUEST_STORAGE']='1'
-										save_config &&
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
@@ -500,18 +753,55 @@ configure () {
 									'disable',*|*,'disable')
 										printf "${color['BRED']}%s\n${color['RESET']}" 'Disabling...'
 										config['REQUEST_STORAGE']=''
-										save_config &&
+										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 										break 1
 										;;
 
 									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: $(test -n "${config['REQUEST_STORAGE']}" && echo 'true' || echo 'false')"; break 1;;
-									'clear',*|*,'clear') clear; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting request for storage configuration...'; break 2;;
 									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 								esac
 							done
 						done
+						break 1
+						;;
+
+					'Always save config',*|*,'Always save config')
+						while true; do
+							select option in 'enable' 'disable' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'enable',*|*,'enable')
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Enabling...'
+										config['ALWAYS_SAVE']='1'
+										test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'disable',*|*,'disable')
+										printf "${color['BRED']}%s\n${color['RESET']}" 'Disabling...'
+										config['ALWAYS_SAVE']=''
+										test -n "${config['ALWAYS_SAVE']}" && test -n "${config['ALWAYS_SAVE']}" && save_config
+										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') printf "${color['BCYAN']}%s\n${color['RESET']}" "Current: $(test -n "${config['ALWAYS_SAVE']}" && echo 'true' || echo 'false')"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting always saving configuration...'; break 2;;
+									*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'save',*|*,'save')
+						printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" 'Saving configuration...'
+						save_config
+						printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
 						break 1
 						;;
 
@@ -534,7 +824,7 @@ configure () {
 										break 1
 										;;
 
-									'clear',*|*,'clear') clear; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting resetting configuration...'; break 2;;
 								esac
 							done
@@ -542,7 +832,7 @@ configure () {
 						break 1
 						;;
 
-					'clear',*|*,'clear') clear; break 1;;
+					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting tarmux configuration...'; break 2;;
 					*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 				esac
@@ -555,7 +845,7 @@ configure () {
 				'install',*|*,'install') installPkg; break 1;;
 				'uninstall',*|*,'uninstall') uninstallPkg; break 1;;
 				'tarmux',*|*,'tarmux') tarmuxConf; break 1;;
-				'clear',*|*,'clear') clear; break 1;;
+				'clear',*|*,'clear'|*,) clear; break 1;;
 				'exit',*|*,'exit') printf "${color['BRED']}%s\n${color['RESET']}" 'Exiting...'; break 2;;
 				*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown option' >&2; break 1;;
 			esac
@@ -574,10 +864,11 @@ version () {
 
 
 # Check if backup data is not writable and can request permission.
-while test '(' '!' -w "${config['BACKUP_DATA']}" ')' -a '(' -n "${config['REQUEST_STORAGE']}" ')'; do
-	printf "${color['BCYAN']}%s\n${color['RESET']}" "No write permission on ${config['BACKUP_DATA']}. Requesting storage permission..."
+while test '(' '!' -w "${config['TARMUX_DATA']}" ')' -a '(' -n "${config['REQUEST_STORAGE']}" ')'; do
+	printf "${color['BCYAN']}%s\n${color['RESET']}" "No write permission on ${config['TARMUX_DATA']}. Requesting storage permission..."
 	termux-setup-storage
 done
 
-save_config
+test -n "${config['ALWAYS_SAVE']}" && save_config
 options ${opt:-'--'} # Without "" is necessary!!!
+test -n "${config['ALWAYS_SAVE']}" && save_config

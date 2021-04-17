@@ -1,5 +1,7 @@
-# Tarmux
-Backup files on Termux with `tar`
+# `tarmux`
+Backup files on Termux with `tar`.
+
+*Please lowercase `tarmux` and format it as code if possible; if the first word is at the start of a sentence you may not lowercase. This is to avoid confusion with Termux and `tarmux`.*
 
 Issues may occur on Bash POSIX or Restricted mode when setting `bash -p` or `bash -r` respectively.
 
@@ -9,6 +11,8 @@ Issues may occur on Bash POSIX or Restricted mode when setting `bash -p` or `bas
 
 ----
 ### Install `make`
+
+*Although it is not required, you can manually change and install it to the location of your choosing.*
 
 ```bash
 apt update
@@ -28,7 +32,7 @@ tarmux -c # Select installation
 ----
 ## Uninstallation
 
-You must install [`make`](#install-make)
+You must install [`make`](#install-make) (Well as I said earlier you can uninstall it to the location you specified manually.)
 
 -----
 ### Uninstall
@@ -124,6 +128,7 @@ You are to configure with `tarmux -c`.
 				<tr>
 					<th>Configuration</th>
 					<th>Description</th>
+					<th>Nested configuration</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -134,59 +139,162 @@ You are to configure with `tarmux -c`.
 					<td>
 						Location of where `tarmux` lives at, once you run `tarmux` you have to configure so as to move it to a different location (You can also <code>reset</code> it and move it; this will be explained in another row).
 					</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>
-						<code>Backup root directory</code>
+						<code>Backup</code>
 					</td>
+					<td>Configuration for your backup tools</td>
 					<td>
-						Location of where your termux backup directories.
+						<table>
+						<thead>
+							<tr>
+								<th>Configuration</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>
+									<code>Backup tool</code>
+								</td>
+								<td>
+									Your backup tools; backup tools are either enabled with options (<code>-I</code> or <code>--use-compress-program=</code>; or built-in options such as <code>-J</code> or <code>-xz</code>.) or pipes.
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Backup options</code>
+								</td>
+								<td>
+									You can use additional options not already in <code>tarmux</code>; As explained earlier (if you did read it) additional options can be added to use different compression methods.
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Backup environmental variables</code>
+								</td>
+								<td>
+									<strong>
+										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
+									</strong><br>
+									Environmental variables for the backup tool.<br>
+									For example:
+									<code>ZSTD_CLEVEL=19 tar --zstd -cf /storage/emulated/0/Backups/Termux/backup97489.tar.zst com.termux</code>
+								</td>
+							</tr>
+						</tbody>
+						</table>
 					</td>
 				</tr>
 				<tr>
 					<td>
-						<code>Backup data directory</code>
+						<code>Restore</code>
+					</td>
+					<td>Configuration for restoring Termux.</td>
+					<td>
+						<table>
+						<thead>
+							<tr>
+								<th>Configuration</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>
+									<code>Restore tool</code>
+								</td>
+								<td>
+									Your restore tools; restore tools are either enabled with options (<code>-I</code> or <code>--use-compress-program=</code>; or built-in options such as <code>-J</code> or <code>-xz</code>.) or pipes.
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Restore options</code>
+								</td>
+								<td>
+									You can use additional options not already in <code>tarmux</code>; As explained earlier (if you did read it) additional options can be added to use different decompression methods.
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Restore environmental variables</code>
+								</td>
+								<td>
+									<strong>
+										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
+									</strong><br>
+									Environmental variables for the restore tool.<br>
+									For example:
+									<code>ZSTD_CLEVEL=19 tar --zstd -xf /storage/emulated/0/Backups/Termux/backup97490.tar.zst com.termux</code>
+								</td>
+							</tr>
+						</tbody>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<code>tarmux backup root directory</code>
+					</td>
+					<td>
+						Location of your backup directories.
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<code>tarmux backup data directory</code>
 					</td>
 					<td>Location of your backups.</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>
-						<code>Backup name</code>
+						<code>tarmux backup name</code>
 					</td>
 					<td>
 						Name of your backups, since this also has <code>date</code> within, you can use control characters (the list of it is in <code>man date</code> or any other help page) to add the date of your backup.
 					</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>
-						<code>Backup extension</code>
+						<code>tarmux backup extension</code>
 					</td>
 					<td>Self-explanatory; extension of your backup filename.</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>
-						<code>Backup directories</code>
+						<code>tarmux backup directories</code>
 					</td>
 					<td>
 						Your <code>tarmux</code> backup directories.<br>
 						On how to separate them is explained on another row.
 					</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>
-						<code>Backup directories separator</code>
+						<code>tarmux backup directories separator</code>
 					</td>
 					<td>
 						Backup directory separator<br>
 						For example:<br>
 						<code>home[separator]usr</code>
 					</td>
+					<td></td>
+				</tr>
 				</tr>
 				<tr>
 					<td>
 						<code>reset</code>
 					</td>
 					<td>Self-explanatory; reset your config file to the defaults.</td>
+					<td></td>
 				</tr>
 			</tbody>
 			</table>
