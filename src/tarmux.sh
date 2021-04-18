@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.0.1'
+VERSION='v0.3.0.2'
 
 # Colors
 ## Prefixes
@@ -117,7 +117,6 @@ options () {
 				continue
 				;;
 
-					## tarmux configuration
 			'--')
 				test -z "${opt:4}" && usage ## Check if no options, then display usage.
 				break 1
