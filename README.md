@@ -1,9 +1,19 @@
 # `tarmux`
-Overengineered tool to backup files on Termux with `tar`.
+Tool to backup files on Termux with `tar`.
 
 *Please lowercase `tarmux` and format it as code if possible; if the first word is at the start of a sentence you may not lowercase. This is to avoid confusion with Termux and `tarmux`.*
 
 Issues may occur on Bash POSIX or Restricted mode when setting `bash -p` or `bash -r` respectively.
+
+---
+
+## Versions
+
+There are two versions, *main* and *yagni*.
+
+<!-- Change the link if you want to fork. -->
+- [(Current) The *main* version contains so many overengineered features.](https://github.com/GrpeApple/tarmux/tree/main)
+- [The *yagni* version stands for [*You aren't gonna need it*](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it).](https://github.com/GrpeApple/tarmux/tree/yagni)
 
 ---
 
