@@ -12,8 +12,8 @@ Issues may occur on Bash POSIX or Restricted mode when setting `bash -p` or `bas
 There are two versions, *main* and *yagni*.
 
 <!-- Change the link if you want to fork. -->
-- [(Current) The *main* version contains so many overengineered features.](https://github.com/GrpeApple/tarmux/tree/main)
-- [The *yagni* version stands for [*You aren't gonna need it*](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it).](https://github.com/GrpeApple/tarmux/tree/yagni)
+- (Current) The [*main* version](https://github.com/GrpeApple/tarmux/tree/main) contains so many overengineered features.
+- The [*yagni* version](https://github.com/GrpeApple/tarmux/tree/yagni) stands for [*You aren't gonna need it*](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it).
 
 ---
 
