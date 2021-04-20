@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.0.2'
+VERSION='v0.3.0.3'
 
 # Colors
 ## Prefixes

@@ -1,5 +1,5 @@
 # `tarmux`
-Backup files on Termux with `tar`.
+Overengineered tool to backup files on Termux with `tar`.
 
 *Please lowercase `tarmux` and format it as code if possible; if the first word is at the start of a sentence you may not lowercase. This is to avoid confusion with Termux and `tarmux`.*
 
