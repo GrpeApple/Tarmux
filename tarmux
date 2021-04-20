@@ -1,0 +1,103 @@
+#!/data/data/com.termux/files/usr/bin/env bash
+
+VERSION='v1.0.0-YAGNI'
+STORAGE='/storage/emulated/0/Download'
+BACKUP="$(date +'termux_backup_%Y-%m-%d_%H-%M-%S-%N.bak')"
+SOURCE='/data/data/com.termux/files'
+DIRECTORIES=( 'home' 'usr' )
+OPTIONS=( '-z' )
+
+# Options for tarmux
+opt="$(getopt --options 'hvbr:V' --alternative --longoptions 'help,verbose,backup,restore:,version' --name 'tarmux' --shell 'bash' -- "${@:---}")"
+# Working directory
+CWD="${PWD}"
+
+# Option management
+options () {
+	while true; do
+		case "${1:---}" in
+			'-h'|'--help')
+				usage
+				break 1
+				;;
+
+			'-v'|'--verbose')
+				OPTIONS+=( '-v' )
+				shift 1
+				continue 1
+				;;
+
+			'-b'|'--backup')
+				backup
+				shift 1
+				continue 1
+				;;
+
+			'-r'|'--restore')
+				if test -f "${2}"; then
+					restore "${2}"
+				else
+					echo "File '${2}' does not exist." >&2
+					exit 1
+					break 1
+				fi
+				shift 2
+				continue 1
+				;;
+
+			'-V'|'--version')
+				version
+				shift 1
+				continue 1
+				;;
+
+			'--')
+				test -z "${opt:4}" && usage ## Check if no options, then display usage.
+				break 1
+				;;
+
+			*) echo 'Unknown error' >&2; exit 1; break 1;; # This should not happen unless a change to the program is made.
+		esac
+	done
+}
+
+usage () {
+cat <<EOU
+Usage: $(basename "${0:-tarmux}") -[[h|[-]help]|[v|[-]verbose]|[b|[-]backup]|[r|[-]restore[=]] BACKUP|[V|[-]version]]
+Options:
+	-h|-help		Display this help usage
+	-v|-verbose		Verbose output of tar
+	-b|-backup		Backup
+	-r|-restore=BACKUP	Restore
+	-V|-version		Display version and information
+EOU
+}
+
+backup () {
+	echo 'Backing up...'
+	cd "${SOURCE}" || exit 1
+	tar "${OPTIONS[@]}" -cf "${STORAGE}/${BACKUP}" "${DIRECTORIES[@]}" || rm -f "${STORAGE}/${BACKUP}" || exit 1
+	cd "${CWD}" || exit 1
+	echo 'Done!'
+}
+
+restore () {
+	echo 'Restoring...'
+	cd "${SOURCE}" || exit 1
+	tar "${OPTIONS[@]}" -xf "${1:-/dev/null}" "${DIRECTORIES[@]}" || exit 1
+	cd "${CWD}" || exit 1
+	echo 'Done!'
+}
+
+version () {
+	echo "tarmux ${VERSION:-Unknown}"
+}
+
+
+# Check if backup data is not writable and can request permission.
+while test '(' '!' -w "${STORAGE}" ')'; do
+	echo "No write permission on '${STORAGE}'. Requesting storage permission..."
+	termux-setup-storage
+done
+
+options ${opt:-'--'} # Without "" is necessary!!!
