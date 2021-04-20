@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.0.3'
+VERSION='v0.3.0.4'
 
 # Colors
 ## Prefixes
@@ -128,7 +128,7 @@ options () {
 }
 
 usage () {
-	printf "${color['BCYAN']}%s\n${color['RESET']}" "Usage: $(basename "${config['INSTALL']}") -[[h|[-]help]|[c|[-]configure]|[v|[-]version]]"
+	printf "${color['BCYAN']}%s\n${color['RESET']}" "Usage: $(basename "${config['INSTALL']}") -[[h|[-]help]|[c|[-]configure]|[V|[-]version]]"
 	printf "${color['BBLUE']}%s\n${color['RESET']}" 'Options:'
 readarray options <<EOU
 	-h|-help	Display this help usage
