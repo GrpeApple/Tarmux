@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v1.0.0-YAGNI'
+VERSION='v1.0.0.1-YAGNI'
 STORAGE='/storage/emulated/0/Download'
 BACKUP="$(date +'termux_backup_%Y-%m-%d_%H-%M-%S-%N.bak')"
 SOURCE='/data/data/com.termux/files'
@@ -16,46 +16,22 @@ CWD="${PWD}"
 options () {
 	while true; do
 		case "${1:---}" in
-			'-h'|'--help')
-				usage
-				break 1
-				;;
-
-			'-v'|'--verbose')
-				OPTIONS+=( '-v' )
-				shift 1
-				continue 1
-				;;
-
-			'-b'|'--backup')
-				backup
-				shift 1
-				continue 1
-				;;
-
+			'-h'|'--help') usage; break 1;;
+			'-v'|'--verbose') OPTIONS+=( '-v' ); shift 1; continue 1;;
+			'-b'|'--backup') backup; shift 1; continue 1;;
 			'-r'|'--restore')
 				if test -f "${2}"; then
 					restore "${2}"
 				else
 					echo "File '${2}' does not exist." >&2
 					exit 1
-					break 1
 				fi
 				shift 2
 				continue 1
 				;;
 
-			'-V'|'--version')
-				version
-				shift 1
-				continue 1
-				;;
-
-			'--')
-				test -z "${opt:4}" && usage ## Check if no options, then display usage.
-				break 1
-				;;
-
+			'-V'|'--version') version; shift 1; continue 1;;
+			'--') test -z "${opt:4}" && usage; break 1;; ## Check if no options, then display usage.
 			*) echo 'Unknown error' >&2; exit 1; break 1;; # This should not happen unless a change to the program is made.
 		esac
 	done
