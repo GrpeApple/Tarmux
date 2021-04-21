@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.0.4'
+VERSION='v0.3.0.5'
 
 # Colors
 ## Prefixes
@@ -122,7 +122,7 @@ options () {
 				break 1
 				;;
 
-			*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown error' >&2; exit 1; break 1;; # This should not happen unless a change to the program is made.
+			*) printf "${color['BRED']}%s\n${color['RESET']}" 'Unknown error' >&2; return 1;; # This should not happen unless a change to the program is made.
 		esac
 	done
 }
@@ -487,7 +487,7 @@ configure () {
 														read -r -e INSTALL
 														printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving installation directory '${config['INSTALL']}' to '${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}'..."
 														### Do not treat INSTALL as moving to a directory; Always be a file.
-														mv --interactive --no-target-directory "${config['INSTALL']}" "${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}" || exit 1
+														mv --interactive --no-target-directory "${config['INSTALL']}" "${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}" || break 1
 														config['INSTALL']="${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}"
 														test -n "${config['ALWAYS_SAVE']}" && save_config
 														printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
@@ -511,7 +511,7 @@ configure () {
 										read -r -e INSTALL
 										printf "${color['BWHITE']}${color['KBLACK']}%s\n${color['RESET']}" "Moving installation directory '${config['INSTALL']}' to '${INSTALL:-${config['INSTALL']}}'..."
 										## Do not treat INSTALL as moving to a directory; Always be a file.
-										mv --interactive --no-target-directory "${config['INSTALL']}" "${INSTALL:-${config['INSTALL']}}" || exit 1
+										mv --interactive --no-target-directory "${config['INSTALL']}" "${INSTALL:-${config['INSTALL']}}" || break 1
 										config['INSTALL']="${INSTALL:-${config['INSTALL']}}"
 										test -n "${config['ALWAYS_SAVE']}" && save_config
 										printf "${color['BGREEN']}%s\n${color['RESET']}" 'Done!'
