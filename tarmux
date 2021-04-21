@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v1.0.0.1-YAGNI'
+VERSION='v1.0.1-YAGNI'
 STORAGE='/storage/emulated/0/Download'
 BACKUP="$(date +'termux_backup_%Y-%m-%d_%H-%M-%S-%N.bak')"
 SOURCE='/data/data/com.termux/files'
