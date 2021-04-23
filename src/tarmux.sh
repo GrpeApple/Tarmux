@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.2.3'
+VERSION='v0.3.2.4'
 
 # Colors
 ## Prefixes
@@ -400,7 +400,7 @@ configure () {
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "$(dirname "${config['INSTALL']}")" &>/dev/null
+										cd "$(dirname "${config['INSTALL']}")" || colors 'BRED' 'Error going to current config installation directory.' >&2
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
@@ -420,13 +420,13 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
-													'./..',*|*,'./..') cd ..; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}"; break 1;;
+													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
+													'./..',*|*,'./..') cd .. || true; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' >&2; break 1;;
 												esac
 											done
 										done
-										cd "${CWD}" &>/dev/null
+										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' >&2
 										break 1
 										;;
 
@@ -459,7 +459,7 @@ configure () {
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "${config['TARMUX_ROOT']}" &>/dev/null
+										cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Error going to current config tarmux root directory.' >&2
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
@@ -476,13 +476,13 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup root directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
-													'./..',*|*,'./..') cd ..; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}"; break 1;;
+													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
+													'./..',*|*,'./..') cd .. || true; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' >&2; break 1;;
 												esac
 											done
 										done
-										cd "${CWD}" &>/dev/null
+										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' >&2
 										break 1
 										;;
 
@@ -511,7 +511,7 @@ configure () {
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "${config['TARMUX_DATA']}" &>/dev/null
+										cd "${config['TARMUX_DATA']}" || colors 'BRED' 'Error going to current config tarmux data directory.' >&2
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
@@ -528,13 +528,13 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}"; break 1;;
+													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd ..; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}"; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' >&2; break 1;;
 												esac
 											done
 										done
-										cd "${CWD}" &>/dev/null
+										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' >&2
 										break 1
 										;;
 
