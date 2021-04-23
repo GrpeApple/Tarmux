@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.3'
+VERSION='v0.3.3.1'
 
 # Colors
 ## Prefixes
@@ -44,7 +44,7 @@ declare -A config=(
 	['RESTORE_TOOL']='tar'
 	['RESTORE_OPTIONS']='-z'
 	['RESTORE_ENV']=''
-	['DELETE_TARMUX_ROOT']=''
+	['DELETE_TARMUX_ROOT']='1'
 	['TARMUX_ROOT']='/data/data/com.termux/files'
 	['TARMUX_DATA']='/storage/emulated/0/Download'
 	['TARMUX_NAME']='termux_backup_%Y-%m-%d_%H-%M-%S-%N'
