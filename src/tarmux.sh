@@ -66,6 +66,7 @@ touch "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_F
 INSTALL="${config['INSTALL']}"
 
 # You are responsible for putting dangerous stuff in the config file.
+## shellcheck source=/dev/null ## Why not
 source "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}"
 
 # Check if INSTALL changed
