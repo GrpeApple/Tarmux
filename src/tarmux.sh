@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.3.1'
+VERSION='v0.3.4'
 
 # Colors
 ## Prefixes
@@ -40,19 +40,39 @@ declare -A config=(
 	['INSTALL']="$(realpath "${0:-./tarmux}")"
 	['BACKUP_TOOL']='tar'
 	['BACKUP_OPTIONS']='-z'
-	['BACKUP_ENV']=''
+	['BACKUP_ENV']='false'
 	['RESTORE_TOOL']='tar'
 	['RESTORE_OPTIONS']='-z'
-	['RESTORE_ENV']=''
-	['DELETE_TARMUX_ROOT']='1'
+	['RESTORE_ENV']='false'
+	['DELETE_TARMUX_ROOT']='true'
 	['TARMUX_ROOT']='/data/data/com.termux/files'
 	['TARMUX_DATA']='/storage/emulated/0/Download'
 	['TARMUX_NAME']='termux_backup_%Y-%m-%d_%H-%M-%S-%N'
 	['TARMUX_EXT']='.bak'
 	['TARMUX_LIST']='home|usr'
 	['TARMUX_IFS']='|'
-	['REQUEST_STORAGE']='1'
-	['ALWAYS_SAVE']='1'
+	['REQUEST_STORAGE']='true'
+	['ALWAYS_SAVE']='true'
+)
+
+## tarmux preferences name
+declare -A config_name=(
+	['INSTALL']="Installation directory"
+	['BACKUP_TOOL']='Backup tool'
+	['BACKUP_OPTIONS']='Backup options'
+	['BACKUP_ENV']='Backup environmental variables'
+	['RESTORE_TOOL']='Restore tool'
+	['RESTORE_OPTIONS']='Restore options'
+	['RESTORE_ENV']='Restore environmental variables'
+	['DELETE_TARMUX_ROOT']='Always delete tarmux root directory before restore'
+	['TARMUX_ROOT']='Tarmux backup root directory'
+	['TARMUX_DATA']='Tarmux backup data directory'
+	['TARMUX_NAME']='Tarmux backup name'
+	['TARMUX_EXT']='Tarmux backup extension'
+	['TARMUX_LIST']='Tarmux bakup directories'
+	['TARMUX_IFS']='Tarmux backup directories separator'
+	['REQUEST_STORAGE']='Always ask storage permission'
+	['ALWAYS_SAVE']='Always save config'
 )
 
 ## Config location
@@ -396,7 +416,7 @@ configure () {
 								case "${option},${REPLY}" in
 									'enable',*|*,'enable')
 										colors 'BGREEN' 'Enabling...'
-										config['DELETE_TARMUX_ROOT']='1'
+										config['DELETE_TARMUX_ROOT']='true'
 										test -n "${config['ALWAYS_SAVE']}" && save_config &&
 										colors 'BGREEN' 'Done!'
 										break 1
@@ -404,13 +424,13 @@ configure () {
 
 									'disable',*|*,'disable')
 										colors 'BRED' 'Disabling...'
-										config['DELETE_TARMUX_ROOT']=''
+										config['DELETE_TARMUX_ROOT']='false'
 										test -n "${config['ALWAYS_SAVE']}" && save_config &&
 										colors 'BGREEN' 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') colors 'BCYAN' "Current: $(test -n "${config['DELETE_TARMUX_ROOT']}" && echo 'true' || echo 'false')"; break 1;;
+									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['DELETE_TARMUX_ROOT']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting deletion of tarmux root directory before restoring configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' >&2; break 1;;
@@ -705,7 +725,7 @@ configure () {
 								case "${option},${REPLY}" in
 									'enable',*|*,'enable')
 										colors 'BGREEN' 'Enabling...'
-										config['REQUEST_STORAGE']='1'
+										config['REQUEST_STORAGE']='true'
 										test -n "${config['ALWAYS_SAVE']}" && save_config &&
 										colors 'BGREEN' 'Done!'
 										break 1
@@ -713,13 +733,13 @@ configure () {
 
 									'disable',*|*,'disable')
 										colors 'BRED' 'Disabling...'
-										config['REQUEST_STORAGE']=''
+										config['REQUEST_STORAGE']='false'
 										test -n "${config['ALWAYS_SAVE']}" && save_config &&
 										colors 'BGREEN' 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') colors 'BCYAN' "Current: $(test -n "${config['REQUEST_STORAGE']}" && echo 'true' || echo 'false')"; break 1;;
+									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['REQUEST_STORAGE']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting request for storage configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' >&2; break 1;;
@@ -735,7 +755,7 @@ configure () {
 								case "${option},${REPLY}" in
 									'enable',*|*,'enable')
 										colors 'BGREEN' 'Enabling...'
-										config['ALWAYS_SAVE']='1'
+										config['ALWAYS_SAVE']='true'
 										test -n "${config['ALWAYS_SAVE']}" && save_config &&
 										colors 'BGREEN' 'Done!'
 										break 1
@@ -743,13 +763,13 @@ configure () {
 
 									'disable',*|*,'disable')
 										colors 'BRED' 'Disabling...'
-										config['ALWAYS_SAVE']=''
+										config['ALWAYS_SAVE']='false'
 										test -n "${config['ALWAYS_SAVE']}" && test -n "${config['ALWAYS_SAVE']}" && save_config &&
 										colors 'BGREEN' 'Done!'
 										break 1
 										;;
 
-									'view',*|*,'view') colors 'BCYAN' "Current: $(test -n "${config['ALWAYS_SAVE']}" && echo 'true' || echo 'false')"; break 1;;
+									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['ALWAYS_SAVE']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting always saving configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' >&2; break 1;;
@@ -810,7 +830,7 @@ configure () {
 
 version () {
 readarray config_variables <<EOV
-$(for key in "${!config[@]}"; do echo -e "\t${key}: '${config[${key}]}'"; done)
+$(for key in "${!config[@]}"; do printf '\t%s\n' "${config_name["${key}"]}: '${config[${key}]}'"; done)
 EOV
 	colors 'BCYAN' "tarmux ${VERSION}"
 	colors 'BPURPLE' "Config: '${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}'"
