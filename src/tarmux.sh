@@ -65,8 +65,8 @@ touch "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_F
 # Backup variables before sourcing.
 INSTALL="${config['INSTALL']}"
 
+# shellcheck source=/dev/null # Why not
 # You are responsible for putting dangerous stuff in the config file.
-## shellcheck source=/dev/null ## Why not
 source "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}"
 
 # Check if INSTALL changed
