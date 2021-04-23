@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.2.2'
+VERSION='v0.3.2.3'
 
 # Colors
 ## Prefixes
@@ -24,8 +24,8 @@ colors () {
 	## Here is what it does:
 	### The first parameter is the color
 	### The second and the number of arguments subtracted by 1 (1st is color)
-	test "${#@}" -lt '3' && last="${@: -1}"
-	printf "${color["${1}"]}${color['KBLACK']}%s${color['RESET']}" "${2}" "${last:+${@:3:$(("${#@}" -1))}}"; test "${2: -2}" != ": " && printf '\n'
+	test "${#}" -lt '3' && last=( "${@: -1}" )
+	printf "${color["${1}"]}${color['KBLACK']}%s${color['RESET']}" "${2}" "${last:+${@:3:$(("${#}" -1))}}"; test "${2: -2}" != ": " && printf '\n'
 }
 
 # Check shell options
@@ -80,7 +80,7 @@ if [[ "${INSTALL}" != "${config['INSTALL']}" ]]; then
 fi
 
 # Options for tarmux
-opt="$(getopt --options 'hcV' --alternative --longoptions 'help,configure,version' --name 'tarmux' --shell 'bash' -- "${@:---}")"
+read -r -a opt <<< "$(getopt --options 'hcV' --alternative --longoptions 'help,configure,version' --name 'tarmux' --shell 'bash' -- "${@:---}")"
 # Working directory
 CWD="${PWD}"
 
@@ -112,7 +112,7 @@ options () {
 			'-h'|'--help') usage; break 1;;
 			'-c'|'--configure') configure; shift 1; continue;;
 			'-V'|'--version') version; shift 1; continue;;
-			'--') test -z "${opt:4}" && usage; break 1;; ## Check if no options, then display usage.
+			'--') test -z "${opt[1]}" && usage; break 1;; ## Check if no options, then display usage.
 			*) colors 'BRED' 'Unknown error' >&2; return 1;; # This should not happen unless a change to the program is made.
 		esac
 	done
@@ -788,5 +788,5 @@ while test '(' '!' -w "${config['TARMUX_DATA']}" ')' -a '(' -n "${config['REQUES
 done
 
 test -n "${config['ALWAYS_SAVE']}" && save_config &&
-options ${opt:-'--'} && # Without "" is necessary!!!
+options "${opt[@]:---}" &&
 test -n "${config['ALWAYS_SAVE']}" && save_config
