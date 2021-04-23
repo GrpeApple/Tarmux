@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.5'
+VERSION='v0.3.5.1'
 
 # Colors
 ## Prefixes
@@ -790,8 +790,9 @@ configure () {
 										case "${REPLY:-n}" in
 											'y'|'Y')
 												colors 'BWHITE' 'Resetting...'
+												printf 'config["ALWAYS_SAVE"]="false"' > "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" &&
+												source "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" &&
 												printf '' > "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" &&
-												unset config
 												colors 'BGREEN' 'Done!'
 												;;
 
