@@ -1,6 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.5.1'
+# Shellcheck
+# shellcheck source=/dev/null
+
+VERSION='v0.3.5.2'
 
 # Colors
 ## Prefixes
@@ -86,7 +89,6 @@ touch "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_F
 # Backup variables before sourcing.
 INSTALL="${config['INSTALL']}"
 
-# shellcheck source=/dev/null # Why not
 # You are responsible for putting dangerous stuff in the config file.
 source "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}"
 
