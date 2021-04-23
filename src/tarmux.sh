@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.2.1'
+VERSION='v0.3.2.2'
 
 # Colors
 ## Prefixes
@@ -402,7 +402,8 @@ configure () {
 									'explorer',*|*,'explorer')
 										cd "$(dirname "${config['INSTALL']}")" &>/dev/null
 										while true; do
-											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
+											local glob
+											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
@@ -460,7 +461,8 @@ configure () {
 									'explorer',*|*,'explorer')
 										cd "${config['TARMUX_ROOT']}" &>/dev/null
 										while true; do
-											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
+											local glob
+											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
@@ -511,7 +513,8 @@ configure () {
 									'explorer',*|*,'explorer')
 										cd "${config['TARMUX_DATA']}" &>/dev/null
 										while true; do
-											local glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
+											local glob
+											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
