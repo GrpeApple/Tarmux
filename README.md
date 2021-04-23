@@ -241,6 +241,16 @@ You are to configure with `tarmux -c`.
 									<code>ZSTD_CLEVEL=19 tar --zstd -xf /storage/emulated/0/Backups/Termux/backup97490.tar.zst com.termux</code>
 								</td>
 							</tr>
+							<tr>
+								<td>
+									<code>Always delete tarmux root directory before restore</code>
+								</td>
+								<td>
+									When <code>tar</code> restores, any new changes will not be touched.<br>
+									Because of this, it will only restore those that it backed up; allowing unnecessary files.<br>
+									Deleting <code>tarmux</code>'s root directory and restoring it will not allow unnecessary files.<br>
+								</td>
+							</tr>
 						</tbody>
 						</table>
 					</td>

@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v0.3.2.4'
+VERSION='v0.3.3'
 
 # Colors
 ## Prefixes
@@ -44,6 +44,7 @@ declare -A config=(
 	['RESTORE_TOOL']='tar'
 	['RESTORE_OPTIONS']='-z'
 	['RESTORE_ENV']=''
+	['DELETE_TARMUX_ROOT']=''
 	['TARMUX_ROOT']='/data/data/com.termux/files'
 	['TARMUX_DATA']='/storage/emulated/0/Download'
 	['TARMUX_NAME']='termux_backup_%Y-%m-%d_%H-%M-%S-%N'
@@ -96,7 +97,7 @@ PACKAGES=('tar' 'pigz' 'zstd')
 ## Configuration for tarmux
 CONFIGURATIONS=('Installation directory' 'Backup' 'Restore' 'tarmux backup root directory' 'tarmux backup data directory' 'tarmux backup name' 'tarmux backup extension' 'tarmux backup directories' 'tarmux backup directories separator' 'Always ask storage permission' 'Always save config' 'save' 'reset')
 BACKUP_CONFIGURATIONS=('Backup tool' 'Backup options' 'Backup environmental variables')
-RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environmental variables')
+RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environmental variables' 'Always delete tarmux root directory before restore')
 BACKUP_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
 RESTORE_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
 
@@ -382,6 +383,36 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['RESTORE_ENV']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting restore environmental variables configuration...'; break 2;;
+									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Always delete tarmux root directory before restore',*|*,'Always delete tarmux root directory before restore')
+						while true; do
+							select option in 'enable' 'disable' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'enable',*|*,'enable')
+										colors 'BGREEN' 'Enabling...'
+										config['DELETE_TARMUX_ROOT']='1'
+										test -n "${config['ALWAYS_SAVE']}" && save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'disable',*|*,'disable')
+										colors 'BRED' 'Disabling...'
+										config['DELETE_TARMUX_ROOT']=''
+										test -n "${config['ALWAYS_SAVE']}" && save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') colors 'BCYAN' "Current: $(test -n "${config['DELETE_TARMUX_ROOT']}" && echo 'true' || echo 'false')"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting deletion of tarmux root directory before restoring configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' >&2; break 1;;
 								esac
 							done
