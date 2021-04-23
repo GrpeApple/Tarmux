@@ -147,7 +147,7 @@ You are to configure with `tarmux -c`.
 						<code>Installation directory</code>
 					</td>
 					<td>
-						Location of where `tarmux` lives at, once you run `tarmux` you have to configure so as to move it to a different location (You can also <code>reset</code> it and move it; this will be explained in another row).
+						Location of where <code>tarmux</code> lives at, once you run <code>tarmux</code> you have to configure so as to move it to a different location (You can also <code>reset</code> it and move it; this will be explained in another row).
 					</td>
 					<td></td>
 				</tr>
