@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-VERSION='v1.0.1-YAGNI'
+VERSION='v1.0.2-YAGNI'
 STORAGE='/storage/emulated/0/Download'
 BACKUP="$(date +'termux_backup_%Y-%m-%d_%H-%M-%S-%N.bak')"
 SOURCE='/data/data/com.termux/files'
@@ -23,7 +23,7 @@ options () {
 				if test -f "${2}"; then
 					restore "${2}"
 				else
-					echo "File '${2}' does not exist." >&2
+					echo "File '${2}' does not exist." 1>&2
 					exit 1
 				fi
 				shift 2
@@ -32,7 +32,7 @@ options () {
 
 			'-V'|'--version') version; shift 1; continue 1;;
 			'--') test -z "${opt:4}" && usage; break 1;; ## Check if no options, then display usage.
-			*) echo 'Unknown error' >&2; exit 1; break 1;; # This should not happen unless a change to the program is made.
+			*) echo 'Unknown error' 1>&2; exit 1; break 1;; # This should not happen unless a change to the program is made.
 		esac
 	done
 }
