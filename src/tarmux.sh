@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-VERSION='v0.3.5.2'
+VERSION='v0.3.5.3'
 
 # Colors
 ## Prefixes
@@ -33,8 +33,8 @@ colors () {
 
 # Check shell options
 case "${-}" in
-	*'r'*) colors 'BYELLOW' 'WARNING: shell in restricted mode.' >&2;;
-	*'p'*) colors 'BYELLOW' 'WARNING: shell in POSIX mode.' >&2;;
+	*'r'*) colors 'BYELLOW' 'WARNING: shell in restricted mode.' 1>&2;;
+	*'p'*) colors 'BYELLOW' 'WARNING: shell in POSIX mode.' 1>&2;;
 esac
 
 # Configuration
@@ -98,7 +98,7 @@ if [[ "${INSTALL}" != "${config['INSTALL']}" ]]; then
 		WARNING: moving ${INSTALL} to ${config['INSTALL']}.
 		Use ${0:-./tarmux} -c and select 'Installation directory' to move; or use ${0:-./tarmux} -c and select 'reset' then move it to the desired location.
 	EOW
-	colors 'BYELLOW' "${warning[@]}" >&2
+	colors 'BYELLOW' "${warning[@]}" 1>&2
 	## Do not treat config file as moving to a directory; Always be a file.
 	mv --interactive --no-target-directory "${INSTALL}" "${config['INSTALL']}"
 fi
@@ -141,7 +141,7 @@ options () {
 			'-c'|'--configure') configure; shift 1; continue;;
 			'-V'|'--version') version; shift 1; continue;;
 			'--') test -z "${opt[1]}" && usage; break 1;; ## Check if no options, then display usage.
-			*) colors 'BRED' 'Unknown error' >&2; return 1;; ## This should not happen.
+			*) colors 'BRED' 'Unknown error' 1>&2; return 1;; ## This should not happen.
 		esac
 	done
 }
@@ -174,7 +174,7 @@ configure () {
 					'zstd',*|*,'zstd') colors 'BWHITE' 'Installing zstd...'; apt install zstd && colors 'BGREEN' 'Done!'; break 1;;
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting installation...'; break 2;;
-					*) colors 'BRED' 'Unknown option' >&2; break 1;;
+					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 				esac
 			done
 		done
@@ -190,7 +190,7 @@ configure () {
 					'zstd',*|*,'zstd') colors 'BWHITE' 'Uninstalling zstd...'; apt autoremove zstd && colors 'BGREEN' 'Done!'; break 1;;
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting uninstallation...'; break 2;;
-					*) colors 'BRED' 'Unknown option' >&2; break 1;;
+					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 				esac
 			done
 		done
@@ -244,7 +244,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['BACKUP_TOOL']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting backup tool configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -268,7 +268,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['BACKUP_OPTIONS']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting backup options configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -276,7 +276,7 @@ configure () {
 						;;
 
 					'Backup environmental variables',*|*,'Backup environmental variables')
-						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' >&2
+						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' 1>&2
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
@@ -293,7 +293,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['BACKUP_ENV']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting backup environmental variables configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -302,7 +302,7 @@ configure () {
 
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting backup configuration...'; break 2;;
-					*) colors 'BRED' 'Unknown option' >&2; break 1;;
+					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 				esac
 			done
 		done
@@ -356,7 +356,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['RESTORE_TOOL']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting restore tool configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -380,7 +380,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['RESTORE_OPTIONS']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting restore options configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -388,7 +388,7 @@ configure () {
 						;;
 
 					'Restore environmental variables',*|*,'Restore environmental variables')
-						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' >&2
+						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' 1>&2
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
@@ -405,7 +405,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['RESTORE_ENV']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting restore environmental variables configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -435,7 +435,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['DELETE_TARMUX_ROOT']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting deletion of tarmux root directory before restoring configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -444,7 +444,7 @@ configure () {
 
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting restore configuration...'; break 2;;
-					*) colors 'BRED' 'Unknown option' >&2; break 1;;
+					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 				esac
 			done
 		done
@@ -459,7 +459,7 @@ configure () {
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "$(dirname "${config['INSTALL']}")" || colors 'BRED' 'Error going to current config installation directory.' >&2
+										cd "$(dirname "${config['INSTALL']}")" || colors 'BRED' 'Error going to current config installation directory.' 1>&2
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
@@ -481,11 +481,11 @@ configure () {
 													'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd .. || true; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' >&2; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' 1>&2; break 1;;
 												esac
 											done
 										done
-										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' >&2
+										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' 1>&2
 										break 1
 										;;
 
@@ -504,7 +504,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['INSTALL']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -518,7 +518,7 @@ configure () {
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Error going to current config tarmux root directory.' >&2
+										cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Error going to current config tarmux root directory.' 1>&2
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
@@ -537,11 +537,11 @@ configure () {
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup root directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd .. || true; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' >&2; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' 1>&2; break 1;;
 												esac
 											done
 										done
-										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' >&2
+										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' 1>&2
 										break 1
 										;;
 
@@ -558,7 +558,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TARMUX_ROOT']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup root directory configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -570,7 +570,7 @@ configure () {
 							select option in 'explorer' 'manual' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'explorer',*|*,'explorer')
-										cd "${config['TARMUX_DATA']}" || colors 'BRED' 'Error going to current config tarmux data directory.' >&2
+										cd "${config['TARMUX_DATA']}" || colors 'BRED' 'Error going to current config tarmux data directory.' 1>&2
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
@@ -589,11 +589,11 @@ configure () {
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd ..; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' >&2; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' 1>&2; break 1;;
 												esac
 											done
 										done
-										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' >&2
+										cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' 1>&2
 										break 1
 										;;
 
@@ -610,7 +610,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TARMUX_DATA']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -634,7 +634,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TARMUX_NAME']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup name configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -658,7 +658,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TARMUX_EXT']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup extension configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -690,7 +690,7 @@ configure () {
 
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup directories configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -714,7 +714,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TARMUX_IFS']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup directories separator configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -744,7 +744,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['REQUEST_STORAGE']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting request for storage configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -774,7 +774,7 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['ALWAYS_SAVE']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting always saving configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' >&2; break 1;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
 						done
@@ -813,7 +813,7 @@ configure () {
 
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux configuration...'; break 2;;
-					*) colors 'BRED' 'Unknown option' >&2; break 1;;
+					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 				esac
 			done
 		done
@@ -826,7 +826,7 @@ configure () {
 				'tarmux',*|*,'tarmux') tarmuxConf; break 1;;
 				'clear',*|*,'clear'|*,) clear; break 1;;
 				'exit',*|*,'exit') colors 'BRED' 'Exiting...'; break 2;;
-				*) colors 'BRED' 'Unknown option' >&2; break 1;;
+				*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 			esac
 		done
 	done
