@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-VERSION='v0.3.5.3'
+VERSION='v0.3.5.4'
 
 # Colors
 ## Prefixes
@@ -97,6 +97,7 @@ if [[ "${INSTALL}" != "${config['INSTALL']}" ]]; then
 	readarray warning <<-EOW
 		WARNING: moving ${INSTALL} to ${config['INSTALL']}.
 		Use ${0:-./tarmux} -c and select 'Installation directory' to move; or use ${0:-./tarmux} -c and select 'reset' then move it to the desired location.
+		You can also use '--configure' instead of '-c'.
 	EOW
 	colors 'BYELLOW' "${warning[@]}" 1>&2
 	## Do not treat config file as moving to a directory; Always be a file.
