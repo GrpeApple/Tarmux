@@ -179,6 +179,8 @@ You are to configure with `tarmux -c`.
 								</td>
 								<td>
 									You can use additional options not already in <code>tarmux</code>; As explained earlier (if you did read it) additional options can be added to use different compression methods.
+									For example:
+									<code>tar --use-compression-program='zstd --ultra -22 --threads=200' --create --file=backup97488.tar.zst com.termux</code>
 								</td>
 							</tr>
 							<tr>
@@ -192,6 +194,17 @@ You are to configure with `tarmux -c`.
 									Environmental variables for the backup tool.<br>
 									For example:
 									<code>ZSTD_CLEVEL=19 tar --zstd -cf /storage/emulated/0/Backups/Termux/backup97489.tar.zst com.termux</code>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Always use pipes for backup</code>
+								</td>
+								<td>
+									When disabled, <code>tar</code> uses <code>-I</code> or <code>--use-compress-program=</code> to use such backup tool<br>
+									Otherwise, <code>tarmux</code> uses a pipe to backup.<br>
+									For example:
+									<code>tar --create --file=- com.termux | zstd --ultra -22 --threads=200 > /storage/emulated/0/Backups/Termux/backup/97490.tar.zst</code>
 								</td>
 							</tr>
 						</tbody>
@@ -225,7 +238,9 @@ You are to configure with `tarmux -c`.
 									<code>Restore options</code>
 								</td>
 								<td>
-									You can use additional options not already in <code>tarmux</code>; As explained earlier (if you did read it) additional options can be added to use different decompression methods.
+									You can use additional options not already in <code>tarmux</code>; As explained earlier (if you did read it) additional options can be added to use different decompression methods.<br>
+									For example:
+									<code>tar --use-compression-program='zstd --ultra -22 --threads=200' --extract --file=backup97488.tar.zst com.termux</code>
 								</td>
 							</tr>
 							<tr>
@@ -238,7 +253,18 @@ You are to configure with `tarmux -c`.
 									</strong><br>
 									Environmental variables for the restore tool.<br>
 									For example:
-									<code>ZSTD_CLEVEL=19 tar --zstd -xf /storage/emulated/0/Backups/Termux/backup97490.tar.zst com.termux</code>
+									<code>ZSTD_CLEVEL=19 tar --zstd -xf /storage/emulated/0/Backups/Termux/backup97489.tar.zst com.termux</code>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Always use pipes for restore</code>
+								</td>
+								<td>
+									When disabled, <code>tar</code> uses <code>-I</code> or <code>--use-compress-program=</code> to use such restore tool<br>
+									Otherwise, <code>tarmux</code> uses a pipe to restore.<br>
+									For example:
+									<code>zstd -d --ultra -22 --threads=200 --stdout /storage/emulated/0/Backups/Termux/backup/97490.tar.zst | tar -xf - termux-fs</code>
 								</td>
 							</tr>
 							<tr>

@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-VERSION='v0.3.5.4'
+VERSION='v0.3.5.5'
 
 # Colors
 ## Prefixes
@@ -44,9 +44,11 @@ declare -A config=(
 	['BACKUP_TOOL']='tar'
 	['BACKUP_OPTIONS']='-z'
 	['BACKUP_ENV']='false'
+	['BACKUP_PIPE']='false'
 	['RESTORE_TOOL']='tar'
 	['RESTORE_OPTIONS']='-z'
 	['RESTORE_ENV']='false'
+	['RESTORE_PIPE']='false'
 	['DELETE_TARMUX_ROOT']='true'
 	['TARMUX_ROOT']='/data/data/com.termux/files'
 	['TARMUX_DATA']='/storage/emulated/0/Download'
@@ -64,9 +66,11 @@ declare -A config_name=(
 	['BACKUP_TOOL']='Backup tool'
 	['BACKUP_OPTIONS']='Backup options'
 	['BACKUP_ENV']='Backup environmental variables'
+	['BACKUP_PIPE']='Always use pipes for backup'
 	['RESTORE_TOOL']='Restore tool'
 	['RESTORE_OPTIONS']='Restore options'
 	['RESTORE_ENV']='Restore environmental variables'
+	['RESTORE_PIPE']='Always use pipes for restore'
 	['DELETE_TARMUX_ROOT']='Always delete tarmux root directory before restore'
 	['TARMUX_ROOT']='Tarmux backup root directory'
 	['TARMUX_DATA']='Tarmux backup data directory'
@@ -119,8 +123,8 @@ PACKAGES=('tar' 'pigz' 'zstd')
 
 ## Configuration for tarmux
 CONFIGURATIONS=('Installation directory' 'Backup' 'Restore' 'tarmux backup root directory' 'tarmux backup data directory' 'tarmux backup name' 'tarmux backup extension' 'tarmux backup directories' 'tarmux backup directories separator' 'Always ask storage permission' 'Always save config' 'save' 'reset')
-BACKUP_CONFIGURATIONS=('Backup tool' 'Backup options' 'Backup environmental variables')
-RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environmental variables' 'Always delete tarmux root directory before restore')
+BACKUP_CONFIGURATIONS=('Backup tool' 'Backup options' 'Backup environmental variables' 'Always use pipes for backup')
+RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environmental variables' 'Always use pipes for restore' 'Always delete tarmux root directory before restore')
 BACKUP_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
 RESTORE_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
 
@@ -301,6 +305,36 @@ configure () {
 						break 1
 						;;
 
+					'Always use pipes for backup',*|*,'Always use pipes for backup')
+						while true; do
+							select option in 'enable' 'disable' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'enable',*|*,'enable')
+										colors 'BGREEN' 'Enabling...'
+										config['BACKUP_PIPES']='true'
+										save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'disable',*|*,'disable')
+										colors 'BRED' 'Disabling...'
+										config['BACKUP_PIPES']='false'
+										save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['BACKUP_PIPES']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting using pipes for backing up configuration...'; break 2;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting backup configuration...'; break 2;;
 					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
@@ -406,6 +440,36 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['RESTORE_ENV']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting restore environmental variables configuration...'; break 2;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Always use pipes for restore',*|*,'Always use pipes for restore')
+						while true; do
+							select option in 'enable' 'disable' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'enable',*|*,'enable')
+										colors 'BGREEN' 'Enabling...'
+										config['RESTORE_PIPES']='true'
+										save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'disable',*|*,'disable')
+										colors 'BRED' 'Disabling...'
+										config['RESTORE_PIPES']='false'
+										save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['RESTORE_PIPES']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting using pipes for restoring configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
