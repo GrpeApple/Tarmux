@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-VERSION='v0.3.5.5.2'
+VERSION='v0.3.5.5.3'
 
 # Colors
 ## Prefixes
@@ -28,7 +28,7 @@ colors () {
 	### The first parameter is the color
 	### The second and the number of arguments subtracted by 1 (1st is color)
 	test \( "${#}" -lt '3' \) && last=( "${@: -1}" )
-	printf "${color["${1}"]}${color['KBLACK']}%s${color['RESET']}" "${2}" "${last:+${@:3:$(("${#}" -1))}}"; test \( "${2: -2}" != ": " \) && printf '\n'
+	printf "${color["${1}"]}${color['KBLACK']}%s${color['RESET']}" "${2}" "${last:+${@:3:$(("${#}" -1))}}"; test \( "${2: -2}" != ': ' \) && printf '\n'
 }
 
 # Check shell options
@@ -62,7 +62,7 @@ declare -A config=(
 
 ## tarmux preferences name
 declare -A config_name=(
-	['INSTALL']="Installation directory"
+	['INSTALL']='Installation directory'
 	['BACKUP_TOOL']='Backup tool'
 	['BACKUP_OPTIONS']='Backup options'
 	['BACKUP_ENV']='Backup environmental variables'
@@ -544,7 +544,7 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
+													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd .. || true; break 1;;
 													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' 1>&2; break 1;;
 												esac
@@ -600,7 +600,7 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup root directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
+													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd .. || true; break 1;;
 													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' 1>&2; break 1;;
 												esac
@@ -652,7 +652,7 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p "/" -r -e; cd "/${REPLY}" || true; break 1;;
+													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd ..; break 1;;
 													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' 1>&2; break 1;;
 												esac
@@ -857,7 +857,7 @@ configure () {
 										case "${REPLY:-n}" in
 											'y'|'Y')
 												colors 'BWHITE' 'Resetting...'
-												printf 'config["ALWAYS_SAVE"]="false"' > "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" &&
+												printf "config['ALWAYS_SAVE']='false'" > "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" &&
 												source "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" &&
 												printf '' > "${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}" &&
 												colors 'BGREEN' 'Done!'
@@ -899,7 +899,7 @@ configure () {
 
 version () {
 readarray config_variables <<EOV
-$(for key in "${!config[@]}"; do printf '\t%s\n' "${config_name["${key}"]}: '${config[${key}]}'"; done)
+$(for key in "${!config[@]}"; do printf '\t%s\n' "'${config_name["${key}"]}': '${config[${key}]}'"; done)
 EOV
 	colors 'BCYAN' "tarmux ${VERSION}"
 	colors 'BPURPLE' "Config: '${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}'"
