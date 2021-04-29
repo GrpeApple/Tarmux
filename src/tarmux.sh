@@ -3,7 +3,12 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-VERSION='v0.3.5.5.3'
+VERSION='v0.3.5.6'
+
+if test \( \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \) \); then
+	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
+	exit 1
+fi
 
 # Colors
 ## Prefixes
