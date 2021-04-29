@@ -7,6 +7,13 @@ Issues may occur on Bash POSIX or Restricted mode when setting `bash -p` or `bas
 
 ---
 
+## Requirements
+- Termux 
+- `tar`
+- Bash 4.4 or higher (Possibly on other shells)
+
+---
+
 ## Versions
 
 There are two versions, *main* and *yagni*.
