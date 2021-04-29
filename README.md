@@ -8,7 +8,7 @@ Issues may occur on Bash POSIX or Restricted mode when setting `bash -p` or `bas
 ---
 
 ## Requirements
-- Termux 
+- Termux
 - `tar`
 - Bash 4.4 or higher (Possibly on other shells)
 
