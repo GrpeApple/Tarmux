@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.1'
+readonly VERSION='v0.4.1.1'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -202,7 +202,7 @@ readarray options <<EOU
 	-V|-version		Display version and information
 EOU
 	colors 'BCYAN' "Usage: $(basename "${config['INSTALL']}") -[[h|[-]help]|[[v|[-]verbose]]|[b|[-]backup[=BACKUP]]|[r|[-]restore[=BACKUP]]|[c|[-]configure]|[V|[-]version]]"
-	colors 'BBLUE' 'Options:'
+	colors 'BBLUE' 'Options:'; printf '\n'
 	colors 'BWHITE' "${options[@]}"
 }
 
