@@ -195,9 +195,6 @@ You are to configure with `tarmux -c`.
 									<code>Backup environmental variables</code>
 								</td>
 								<td>
-									<strong>
-										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
-									</strong><br>
 									Environmental variables for the backup tool.<br>
 									For example:
 									<code>ZSTD_CLEVEL=19 tar --zstd -cf /storage/emulated/0/Backups/Termux/backup97489.tar.zst com.termux</code>
@@ -208,6 +205,9 @@ You are to configure with `tarmux -c`.
 									<code>Always use pipes for backup</code>
 								</td>
 								<td>
+									<strong>
+										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
+									</strong><br>
 									When disabled, <code>tar</code> uses <code>-I</code> or <code>--use-compress-program=</code> to use such backup tool<br>
 									Otherwise, <code>tarmux</code> uses a pipe to backup.<br>
 									For example:
@@ -255,9 +255,6 @@ You are to configure with `tarmux -c`.
 									<code>Restore environmental variables</code>
 								</td>
 								<td>
-									<strong>
-										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
-									</strong><br>
 									Environmental variables for the restore tool.<br>
 									For example:
 									<code>ZSTD_CLEVEL=19 tar --zstd -xf /storage/emulated/0/Backups/Termux/backup97489.tar.zst com.termux</code>
@@ -268,6 +265,9 @@ You are to configure with `tarmux -c`.
 									<code>Always use pipes for restore</code>
 								</td>
 								<td>
+									<strong>
+										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
+									</strong><br>
 									When disabled, <code>tar</code> uses <code>-I</code> or <code>--use-compress-program=</code> to use such restore tool<br>
 									Otherwise, <code>tarmux</code> uses a pipe to restore.<br>
 									For example:
@@ -388,6 +388,44 @@ You can use `-some-long-option` or `-some-long` and it will still work.
 			<code>--help</code>
 		</td>
 		<td>Display help message</td>
+	</tr>
+	<tr>
+		<td>
+			<code>-v</code>
+		</td>
+		<td>
+			<code>--verbose</code>
+		</td>
+		<td>
+			Verbose output of <code>tar</code>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<code>-b</code>
+		</td>
+		<td>
+			<code>--backup[=BACKUP]</code>
+		</td>
+		<td>
+			Backup Termux<br>
+			Without an argument, the config of your backup name and backup location is chosen.<br>
+			You may add the location of your backup file; ignoring your config, after the long option separated with <code>=</code>.<br>
+			Incidentally, this has the functionality of having control characters formatted with <code>date</code>. (the list of it is in <code>man date</code> or any other help page)
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<code>-r</code>
+		</td>
+		<td>
+			<code>--restore[=BACKUP]</code>
+		</td>
+		<td>
+			Restore Termux<br>
+			Without an argument, the explorer shows up to select your backup file.<br>
+			You may add a backup directly after the long option separated with code>=</code>.
+		</td>
 	</tr>
 	<tr>
 		<td>

@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-VERSION='v0.3.5.6.1'
+VERSION='v0.4.0'
 
 if test \( \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \) \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -16,11 +16,12 @@ fi
 ### K = Background
 declare -A color=(
 	['RED']='\e[0;31m'
+	['GREEN']='\e[0;32m'
+	['CYAN']='\e[0;36m'
 	['BRED']='\e[1;31m'
 	['BGREEN']='\e[1;32m'
 	['BYELLOW']='\e[1;33m'
 	['BBLUE']='\e[1;34m'
-	['BPURPLE']='\e[1;35m'
 	['BCYAN']='\e[1;36m'
 	['BWHITE']='\e[1;37m'
 	['KBLACK']='\e[40m'
@@ -33,7 +34,7 @@ colors () {
 	### The first parameter is the color
 	### The second and the number of arguments subtracted by 1 (1st is color)
 	test \( "${#}" -lt '3' \) && last=( "${@: -1}" )
-	printf "${color["${1}"]}${color['KBLACK']}%s${color['RESET']}" "${2}" "${last:+${@:3:$(("${#}" -1))}}"; test \( "${2: -2}" != ': ' \) && printf '\n'
+	printf "${color["${1}"]}${color['KBLACK']}%s${color['RESET']}" "${2}" "${last:+${@:3:$(("${#}" -1))}}"; test \( "${2: -1}" != ':' \) && printf '\n'
 }
 
 # Check shell options
@@ -48,11 +49,11 @@ declare -A config=(
 	['INSTALL']="$(realpath "${0:-./tarmux}")"
 	['BACKUP_TOOL']='tar'
 	['BACKUP_OPTIONS']='-z'
-	['BACKUP_ENV']='false'
+	['BACKUP_ENV']=''
 	['BACKUP_PIPE']='false'
 	['RESTORE_TOOL']='tar'
 	['RESTORE_OPTIONS']='-z'
-	['RESTORE_ENV']='false'
+	['RESTORE_ENV']=''
 	['RESTORE_PIPE']='false'
 	['DELETE_TARMUX_ROOT']='true'
 	['TARMUX_ROOT']='/data/data/com.termux/files'
@@ -114,7 +115,7 @@ if [[ "${INSTALL}" != "${config['INSTALL']}" ]]; then
 fi
 
 # Options for tarmux
-read -r -a opt <<< "$(getopt --options 'hcV' --alternative --longoptions 'help,configure,version' --name 'tarmux' --shell 'bash' -- "${@:---}")"
+read -r -a opt <<< "$(getopt --options 'hvb::r::cV' --alternative --longoptions 'help,verbose,backup::,restore::,configure,version' --name 'tarmux' --shell 'bash' -- "${@:---}")"
 
 # Working directory
 CWD="${PWD}"
@@ -130,8 +131,8 @@ PACKAGES=('tar' 'pigz' 'zstd')
 CONFIGURATIONS=('Installation directory' 'Backup' 'Restore' 'tarmux backup root directory' 'tarmux backup data directory' 'tarmux backup name' 'tarmux backup extension' 'tarmux backup directories' 'tarmux backup directories separator' 'Always ask storage permission' 'Always save config' 'save' 'reset')
 BACKUP_CONFIGURATIONS=('Backup tool' 'Backup options' 'Backup environmental variables' 'Always use pipes for backup')
 RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environmental variables' 'Always use pipes for restore' 'Always delete tarmux root directory before restore')
-BACKUP_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
-RESTORE_TOOLS=('tar' 'tar (pigz)' 'tar (zstd)')
+BACKUP_TOOLS=('tar' 'pigz' 'zstd')
+RESTORE_TOOLS=('tar' 'pigz' 'zstd')
 
 # Save configuration
 save_config () {
@@ -148,9 +149,43 @@ options () {
 	while true; do
 		case "${1:---}" in
 			'-h'|'--help') usage; break 1;;
-			'-c'|'--configure') configure; shift 1; continue;;
-			'-V'|'--version') version; shift 1; continue;;
-			'--') test \( -z "${opt[1]}" \) && usage; break 1;; ## Check if no options, then display usage.
+			'-v'|'--verbose')
+				TAR_OPTIONS="--verbose"
+				shift 1
+				continue 1
+				;;
+
+			'-b'|'--backup')
+				argument="${2:1: -1}" # Content
+				if test \( -z "${argument}" \); then
+					backup
+				elif test \( -w "$(dirname "${argument}")" \); then
+					backup "${argument}"
+				else
+					colors 'BRED' "File '${argument}' is not writable." 1>&2
+					return 1
+				fi
+				shift 2
+				continue 1
+				;;
+
+			'-r'|'--restore')
+				argument="${2:1: -1}" # Content
+				if test \( -z "${argument}" \); then
+					restore
+				elif test \( -r "${argument}" \); then
+					restore "${argument}"
+				else
+					colors 'BRED' "File '${argument}' does not exist or unreadable." 1>&2
+					return 1
+				fi
+				shift 2
+				continue 1
+				;;
+
+			'-c'|'--configure') configure; shift 1; continue 1;;
+			'-V'|'--version') version; shift 1; continue 1;;
+			'--') test \( -z "${opt[1]}" \) && usage; shift 1; break 1;; ## Check if no options, then display usage.
 			*) colors 'BRED' 'Unknown error' 1>&2; return 1;; ## This should not happen.
 		esac
 	done
@@ -158,14 +193,134 @@ options () {
 
 # Help message
 usage () {
-	colors 'BCYAN' "Usage: $(basename "${config['INSTALL']}") -[[h|[-]help]|[c|[-]configure]|[V|[-]version]]"
-	colors 'BBLUE' 'Options:'
 readarray options <<EOU
-	-h|-help	Display this help usage
-	-c|-configure	Configure
-	-V|-version	Display version and information
+	-h|-help		Display this help usage
+	-v|-verbose		Verbose output
+	-b|-backup[=BACKUP]	Backup
+	-r|-restore[=BACKUP]	Restore
+	-c|-configure		Configure
+	-V|-version		Display version and information
 EOU
+	colors 'BCYAN' "Usage: $(basename "${config['INSTALL']}") -[[h|[-]help]|[[v|[-]verbose]]|[b|[-]backup[=BACKUP]]|[r|[-]restore[=BACKUP]]|[c|[-]configure]|[V|[-]version]]"
+	colors 'BBLUE' 'Options:'
 	colors 'BWHITE' "${options[@]}"
+}
+
+# Backup
+backup () {
+	if test \( -n "${1}" \); then
+		backup_name="$(date +"${1}")"
+	else
+		backup_name="$(date +"${config['TARMUX_NAME']}")${config['TARMUX_EXT']}"
+	fi
+
+	IFS="${config['TARMUX_IFS']}" read -r -a backup_directories <<< "${config['TARMUX_LIST']}"
+readarray backup_prompt <<EOP
+	Tool: '${config['BACKUP_TOOL']}'
+	Options: '${config['BACKUP_OPTIONS']}'
+	Environmental variables: '${config['BACKUP_ENV']}'
+	Pipe mode: '$(test \( "${config['BACKUP_PIPES']}" == 'true' \) && echo 'true' || echo 'false')'
+	Root directory: '${config['TARMUX_ROOT']}'
+	Backup location: '${config['TARMUX_DATA']}'
+	Backup: '${backup_name}'
+	Directories: ${backup_directories[@]}
+EOP
+	colors 'BCYAN' 'Backing up...'
+	colors 'CYAN' "${backup_prompt[@]}"
+
+	cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
+
+	case "${config['BACKUP_TOOL']}" in
+		'tar')
+			tar ${TAR_OPTIONS} "${config['BACKUP_OPTIONS']}" --create "${backup_directories[@]}" --file="${backup_name}"
+			;;
+
+		'pigz'|'zstd'|*)
+			if test \( "${config['BACKUP_PIPES']}" == 'true' \); then
+				eval "tar ${TAR_OPTIONS} --create ${backup_directories[*]} --file='-' | ${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']} > '${backup_name}'"
+			else
+				tar ${TAR_OPTIONS} --create "${backup_directories[@]}" --file="${backup_name}" --use-compress-program="${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']}"
+			fi
+			;;
+
+	esac
+
+	cd "${CWD}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
+}
+
+# Restore
+restore () {
+	explorer () {
+		cd "$(dirname "${config['TARMUX_DATA']}")" || colors 'BRED' 'Error going to current config tarmux data directory.' 1>&2
+		while true; do
+			local glob
+			glob="$(compgen -G './'* &>/dev/null && echo '1')"
+			select filename in 'clear' 'exit' "${PWD}" './..' ${glob:+./*}; do
+				case "${filename},${REPLY}" in
+					'clear',*|*,'clear'|*,) clear; break 1;;
+					'exit',*|*,'exit') colors 'BRED' 'Exiting restoring Termux...'; return 1;;
+					'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
+					'./..',*|*,'./..') cd .. || true; break 1;;
+					'./'*,*|*,'./'*)
+						if test \( -f "${filename:-${REPLY}}" \); then
+							restore_name="$(realpath "${filename:-${REPLY}}")"
+							break 2
+						else
+							cd "${filename:-${REPLY}}" || true
+							break 1
+						fi
+						;;
+				esac
+			done
+		done
+		cd "${CWD}" || colors 'BRED' 'Error going to previous working directory.' 1>&2
+	}
+
+	if test \( -n "${1}" \); then
+		restore_name="$(realpath "${1:-/dev/null}")"
+	else
+		explorer || return 1
+	fi
+
+	IFS="${config['TARMUX_IFS']}" read -r -a restore_directories <<< "${config['TARMUX_LIST']}"
+readarray restore_prompt <<EOP
+	Tool: '${config['RESTORE_TOOL']}'
+	Options: '${config['RESTORE_OPTIONS']}'
+	Environmental variables: '${config['RESTORE_ENV']}'
+	Pipe mode: '$(test \( "${config['RESTORE_PIPES']}" == 'true' \) && echo 'true' || echo 'false')'
+	Root directory: '${config['TARMUX_ROOT']}'
+	Restore: '${restore_name}'
+	Directories: ${restore_directories[@]}
+EOP
+	colors 'BCYAN' 'Restoring...'
+	colors 'CYAN' "${restore_prompt[@]}"
+
+	cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
+
+	case "${config['RESTORE_TOOL']}" in
+		'tar')
+			tar ${TAR_OPTIONS} "${config['RESTORE_OPTIONS']}" --extract "${restore_directories[@]}" --file="${restore_name}"
+			;;
+
+		'pigz'|'zstd')
+			if test \( "${config['RESTORE_PIPES']}" == 'true' \); then
+				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} --decompress '${restore_name}' | tar ${TAR_OPTIONS} --extract ${restore_directories[*]} --file='-'"
+			else
+				tar ${TAR_OPTIONS} --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+			fi
+			;;
+
+		*)
+			if test \( "${config['RESTORE_PIPES']}" == 'true' \); then
+				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} '${restore_name}' | tar ${TAR_OPTIONS} --extract ${restore_directories[*]} --file='-'"
+			else
+				tar ${TAR_OPTIONS} --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+			fi
+			;;
+
+	esac
+
+	cd "${CWD}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
 }
 
 # Configuration
@@ -178,7 +333,7 @@ configure () {
 					'update',*|*,'update') colors 'BWHITE' 'Updating apt...'; apt update && colors 'BGREEN' 'Done!'; break 1;;
 					'upgrade',*|*,'upgrade') colors 'BWHITE' 'Upgrading packages...'; apt full-upgrade && colors 'BGREEN' 'Done!'; break 1;;
 					'repository',*|*,'repository') colors 'BWHITE' "Changing Termux's repositories..."; termux-change-repo && colors 'BGREEN' 'Done!'; break 1;;
-					'manual',*|*,'manual') colors 'BWHITE' 'Package to install? (): '; read -r -e package; apt install "${package}" && colors 'BGREEN' 'Done!'; break 1;;
+					'manual',*|*,'manual') colors 'BWHITE' 'Package to install? ():'; read -p ' ' -r -e package; apt install "${package}" && colors 'BGREEN' 'Done!'; break 1;;
 					'tar',*|*,'tar') colors 'BWHITE' 'Installing tar...'; apt install tar && colors 'BGREEN' 'Done!'; break 1;;
 					'pigz',*|*,'pigz') colors 'BWHITE' 'Installing pigz...'; apt install pigz && colors 'BGREEN' 'Done!'; break 1;;
 					'zstd',*|*,'zstd') colors 'BWHITE' 'Installing zstd...'; apt install zstd && colors 'BGREEN' 'Done!'; break 1;;
@@ -194,7 +349,7 @@ configure () {
 		while true; do
 			select package in 'manual' "${PACKAGES[@]}" 'clear' 'exit'; do
 				case "${package},${REPLY}" in
-					'manual',*|*,'manual') colors 'BWHITE' 'Package to uninstall? (): '; read -r -e package; apt autoremove "${package}" && colors 'BGREEN' 'Done!'; break 1;;
+					'manual',*|*,'manual') colors 'BWHITE' 'Package to uninstall? ():'; read -p ' ' -r -e package; apt autoremove "${package}" && colors 'BGREEN' 'Done!'; break 1;;
 					'tar',*|*,'tar') colors 'BRED' 'Uninstalling tar (dangerous)...'; apt autoremove tar && colors 'BGREEN' 'Done!'; break 1;;
 					'pigz',*|*,'pigz') colors 'BWHITE' 'Uninstalling pigz...'; apt autoremove pigz && colors 'BGREEN' 'Done!'; break 1;;
 					'zstd',*|*,'zstd') colors 'BWHITE' 'Uninstalling zstd...'; apt autoremove zstd && colors 'BGREEN' 'Done!'; break 1;;
@@ -215,8 +370,8 @@ configure () {
 							select tool in 'manual' "${BACKUP_TOOLS[@]}" 'view' 'clear' 'exit'; do
 								case "${tool},${REPLY}" in
 									'manual',*|*,'manual')
-										colors 'BWHITE' "Backup tool to use? ('${config['BACKUP_TOOL']}'): "
-										read -r -e BACKUP_TOOL
+										colors 'BWHITE' "Backup tool to use? ('${config['BACKUP_TOOL']}'):"
+										read -p ' ' -r -e BACKUP_TOOL
 										colors 'BWHITE' "Changing backup tool '${config['BACKUP_TOOL']}' to '${BACKUP_TOOL:-${config['BACKUP_TOOL']}}'..."
 										config['BACKUP_TOOL']="${BACKUP_TOOL:-${config['BACKUP_TOOL']}}"
 										save_config &&
@@ -233,8 +388,8 @@ configure () {
 										break 1
 										;;
 
-									'tar (pigz)',*|*,'tar (pigz)')
-										local BACKUP_TOOL='tar (pigz)'
+									'pigz',*|*,'pigz')
+										local BACKUP_TOOL='pigz'
 										colors 'BWHITE' "Changing backup tool '${config['BACKUP_TOOL']}' to '${BACKUP_TOOL:-${config['BACKUP_TOOL']}}'..."
 										config['BACKUP_TOOL']="${BACKUP_TOOL:-${config['BACKUP_TOOL']}}"
 										save_config &&
@@ -242,8 +397,8 @@ configure () {
 										break 1
 										;;
 
-									'tar (zstd)',*|*,'tar (zstd)')
-										local BACKUP_TOOL='tar (zstd)'
+									'zstd',*|*,'zstd')
+										local BACKUP_TOOL='zstd'
 										colors 'BWHITE' "Changing backup tool '${config['BACKUP_TOOL']}' to '${BACKUP_TOOL:-${config['BACKUP_TOOL']}}'..."
 										config['BACKUP_TOOL']="${BACKUP_TOOL:-${config['BACKUP_TOOL']}}"
 										save_config &&
@@ -266,8 +421,8 @@ configure () {
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "What backup options? ('${config['BACKUP_OPTIONS']}'): "
-										read -r -e BACKUP_OPTIONS
+										colors 'BWHITE' "What backup options? ('${config['BACKUP_OPTIONS']}'):"
+										read -p ' ' -r -e BACKUP_OPTIONS
 										colors 'BWHITE' "Changing backup options '${config['BACKUP_OPTIONS']}' to '${BACKUP_OPTIONS-${config['BACKUP_OPTIONS']}}'..."
 										config['BACKUP_OPTIONS']="${BACKUP_OPTIONS-${config['BACKUP_OPTIONS']}}"
 										save_config &&
@@ -286,13 +441,12 @@ configure () {
 						;;
 
 					'Backup environmental variables',*|*,'Backup environmental variables')
-						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' 1>&2
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "What backup environmental variables? ('${config['BACKUP_ENV']}'): "
-										read -r -e BACKUP_ENV
+										colors 'BWHITE' "What backup environmental variables? ('${config['BACKUP_ENV']}'):"
+										read -p ' ' -r -e BACKUP_ENV
 										colors 'BWHITE' "Changing backup enviornmental variables '${config['BACKUP_ENV']}' to '${BACKUP_ENV-${config['BACKUP_ENV']}}'..."
 										config['BACKUP_ENV']="${BACKUP_ENV-${config['BACKUP_ENV']}}"
 										save_config &&
@@ -311,6 +465,7 @@ configure () {
 						;;
 
 					'Always use pipes for backup',*|*,'Always use pipes for backup')
+						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' 1>&2
 						while true; do
 							select option in 'enable' 'disable' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
@@ -357,8 +512,8 @@ configure () {
 							select tool in 'manual' "${RESTORE_TOOLS[@]}" 'view' 'clear' 'exit'; do
 								case "${tool},${REPLY}" in
 									'manual',*|*,'manual')
-										colors 'BWHITE' "Restore tool to use? ('${config['RESTORE_TOOL']}'): "
-										read -r -e RESTORE_TOOL
+										colors 'BWHITE' "Restore tool to use? ('${config['RESTORE_TOOL']}'):"
+										read -p ' ' -r -e RESTORE_TOOL
 										colors 'BWHITE' "Changing restore tool '${config['RESTORE_TOOL']}' to '${RESTORE_TOOL:-${config['RESTORE_TOOL']}}'..."
 										config['RESTORE_TOOL']="${RESTORE_TOOL:-${config['RESTORE_TOOL']}}"
 										save_config &&
@@ -375,8 +530,8 @@ configure () {
 										break 1
 										;;
 
-									'tar (pigz)',*|*,'tar (pigz)')
-										local RESTORE_TOOL='tar (pigz)'
+									'pigz',*|*,'pigz')
+										local RESTORE_TOOL='pigz'
 										colors 'BWHITE' "Changing restore tool '${config['RESTORE_TOOL']}' to '${RESTORE_TOOL:-${config['RESTORE_TOOL']}}'..."
 										config['RESTORE_TOOL']="${RESTORE_TOOL:-${config['RESTORE_TOOL']}}"
 										save_config &&
@@ -384,8 +539,8 @@ configure () {
 										break 1
 										;;
 
-									'tar (zstd)',*|*,'tar (zstd)')
-										local RESTORE_TOOL='tar (zstd)'
+									'zstd',*|*,'zstd')
+										local RESTORE_TOOL='zstd'
 										colors 'BWHITE' "Changing restore tool '${config['RESTORE_TOOL']}' to '${RESTORE_TOOL:-${config['RESTORE_TOOL']}}'..."
 										config['RESTORE_TOOL']="${RESTORE_TOOL:-${config['RESTORE_TOOL']}}"
 										save_config &&
@@ -408,8 +563,8 @@ configure () {
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "What options? ('${config['RESTORE_OPTIONS']}'): "
-										read -r -e RESTORE_OPTIONS
+										colors 'BWHITE' "What options? ('${config['RESTORE_OPTIONS']}'):"
+										read -p ' ' -r -e RESTORE_OPTIONS
 										colors 'BWHITE' "Changing restore options '${config['RESTORE_OPTIONS']}' to '${RESTORE_OPTIONS-${config['RESTORE_OPTIONS']}}'..."
 										config['RESTORE_OPTIONS']="${RESTORE_OPTIONS-${config['RESTORE_OPTIONS']}}"
 										save_config &&
@@ -428,13 +583,12 @@ configure () {
 						;;
 
 					'Restore environmental variables',*|*,'Restore environmental variables')
-						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' 1>&2
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "What restore environmental variables? ('${config['RESTORE_ENV']}'): "
-										read -r -e RESTORE_ENV
+										colors 'BWHITE' "What restore environmental variables? ('${config['RESTORE_ENV']}'):"
+										read -p ' ' -r -e RESTORE_ENV
 										colors 'BWHITE' "Changing restore enviornmental variables '${config['RESTORE_ENV']}' to '${RESTORE_ENV-${config['RESTORE_ENV']}}'..."
 										config['RESTORE_ENV']="${RESTORE_ENV-${config['RESTORE_ENV']}}"
 										save_config &&
@@ -453,6 +607,7 @@ configure () {
 						;;
 
 					'Always use pipes for restore',*|*,'Always use pipes for restore')
+						colors 'BYELLOW' 'WARNING: This uses eval, and your security will suffer.' 1>&2
 						while true; do
 							select option in 'enable' 'disable' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
@@ -536,8 +691,8 @@ configure () {
 											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
-														colors 'BWHITE' "Program name? ('$(basename "${config['INSTALL']}")'): "
-														read -r -e INSTALL
+														colors 'BWHITE' "Program name? ('$(basename "${config['INSTALL']}")'):"
+														read -p ' ' -r -e INSTALL
 														colors 'BWHITE' "Moving installation directory '${config['INSTALL']}' to '${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}'..."
 														### Do not treat INSTALL as moving to a directory; Always be a file.
 														mv --interactive --no-target-directory "${config['INSTALL']}" "${PWD}/${INSTALL:-$(basename "${config['INSTALL']}")}" || break 1
@@ -551,7 +706,7 @@ configure () {
 													'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd .. || true; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' 1>&2; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || true; break 1;;
 												esac
 											done
 										done
@@ -560,8 +715,8 @@ configure () {
 										;;
 
 									'manual',*|*,'manual')
-										colors 'BWHITE' "Where? ('${config['INSTALL']}'): "
-										read -r -e INSTALL
+										colors 'BWHITE' "Where? ('${config['INSTALL']}'):"
+										read -p ' ' -r -e INSTALL
 										colors 'BWHITE' "Moving installation directory '${config['INSTALL']}' to '${INSTALL:-${config['INSTALL']}}'..."
 										### Do not treat INSTALL as moving to a directory; Always be a file.
 										mv --interactive --no-target-directory "${config['INSTALL']}" "${INSTALL:-${config['INSTALL']}}" || break 1
@@ -616,8 +771,8 @@ configure () {
 										;;
 
 									'manual',*|*,'manual')
-										colors 'BWHITE' "Where? ('${config['TARMUX_ROOT']}'): "
-										read -r -e TARMUX_ROOT
+										colors 'BWHITE' "Where? ('${config['TARMUX_ROOT']}'):"
+										read -p ' ' -r -e TARMUX_ROOT
 										colors 'BWHITE' "Moving tarmux backup root directory '${config['TARMUX_ROOT']}' to '${TARMUX_ROOT:-${config['TARMUX_ROOT']}}'..."
 										config['TARMUX_ROOT']="${TARMUX_ROOT:-${config['TARMUX_ROOT']}}"
 										save_config &&
@@ -659,7 +814,7 @@ configure () {
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
 													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
 													'./..',*|*,'./..') cd ..; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error.' 1>&2; break 1;;
+													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || true; break 1;;
 												esac
 											done
 										done
@@ -668,8 +823,8 @@ configure () {
 										;;
 
 									'manual',*|*,'manual')
-										colors 'BWHITE' "Where? ('${config['TARMUX_DATA']}'): "
-										read -r -e TARMUX_DATA
+										colors 'BWHITE' "Where? ('${config['TARMUX_DATA']}'):"
+										read -p ' ' -r -e TARMUX_DATA
 										colors 'BWHITE' "Moving tarmux backup data directory '${config['TARMUX_DATA']}' to '${TARMUX_DATA:-${config['TARMUX_DATA']}}'..."
 										config['TARMUX_DATA']="${TARMUX_DATA:-${config['TARMUX_DATA']}}"
 										save_config &&
@@ -692,8 +847,8 @@ configure () {
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "Backup name? You can also include date formats like '%Y-%m-%d' ('${config['TARMUX_NAME']}'): "
-										read -r -e TARMUX_NAME
+										colors 'BWHITE' "Backup name? You can also include date formats like '%Y-%m-%d' ('${config['TARMUX_NAME']}'):"
+										read -p ' ' -r -e TARMUX_NAME
 										colors 'BWHITE' "Changing tarmux backup name '${config['TARMUX_NAME']}' to '${TARMUX_NAME:-${config['TARMUX_NAME']}}'..."
 										config['TARMUX_NAME']="${TARMUX_NAME:-${config['TARMUX_NAME']}}"
 										save_config &&
@@ -716,8 +871,8 @@ configure () {
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "Backup extension? ('${config['TARMUX_EXT']}'): "
-										read -r -e TARMUX_EXT
+										colors 'BWHITE' "Backup extension? ('${config['TARMUX_EXT']}'):"
+										read -p ' ' -r -e TARMUX_EXT
 										colors 'BWHITE' "Changing tarmux backup extension '${config['TARMUX_EXT']}' to '${TARMUX_EXT-${config['TARMUX_EXT']}}'..."
 										config['TARMUX_EXT']="${TARMUX_EXT-${config['TARMUX_EXT']}}"
 										save_config &&
@@ -740,8 +895,8 @@ configure () {
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "What tarmux backup directories? Must be separated with '${config['TARMUX_IFS']}' ('${config['TARMUX_LIST']}'): "
-										read -r -e TARMUX_LIST
+										colors 'BWHITE' "What tarmux backup directories? Must be separated with '${config['TARMUX_IFS']}' ('${config['TARMUX_LIST']}'):"
+										read -p ' ' -r -e TARMUX_LIST
 										colors 'BWHITE' "Changing tarmux backup directories '${config['TARMUX_LIST']}' to '${TARMUX_LIST:-${config['TARMUX_LIST']}}'..."
 										config['TARMUX_LIST']="${TARMUX_LIST:-${config['TARMUX_LIST']}}"
 										save_config &&
@@ -750,7 +905,7 @@ configure () {
 										;;
 
 									'view',*|*,'view')
-										colors 'BCYAN' 'Current: '
+										colors 'BCYAN' 'Current:'
 										IFS="${config['TARMUX_IFS']}" read -r -a backup_directories <<< "${config['TARMUX_LIST']}"
 										for i in "${backup_directories[@]}"; do
 											colors 'BWHITE' "${i}"
@@ -772,8 +927,8 @@ configure () {
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "Directory Separator ('${config['TARMUX_IFS']}'): "
-										read -r -e TARMUX_IFS
+										colors 'BWHITE' "Directory Separator ('${config['TARMUX_IFS']}'):"
+										read -p ' ' -r -e TARMUX_IFS
 										colors 'BWHITE' "Changing tarmux backup directories separator '${config['TARMUX_IFS']}' to '${TARMUX_IFS-${config['TARMUX_IFS']}}'..."
 										config['TARMUX_IFS']="${TARMUX_IFS-${config['TARMUX_IFS']}}"
 										save_config &&
@@ -857,8 +1012,8 @@ configure () {
 							select option in 'reset' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'reset',*|*,'reset')
-										colors 'RED' "Are you sure to reset the config from '${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}'? (y/N): "
-										read -r -e ### No -n1 because I am not that evil.
+										colors 'RED' "Are you sure to reset the config from '${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}'? (y/N):"
+										read -p ' ' -r -e ### No -n1 because I am not that evil.
 										case "${REPLY:-n}" in
 											'y'|'Y')
 												colors 'BWHITE' 'Resetting...'
@@ -907,8 +1062,8 @@ readarray config_variables <<EOV
 $(for key in "${!config[@]}"; do printf '\t%s\n' "'${config_name["${key}"]}': '${config[${key}]}'"; done)
 EOV
 	colors 'BCYAN' "tarmux ${VERSION}"
-	colors 'BPURPLE' "Config: '${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}'"
-	colors 'BWHITE' "${config_variables[@]}"
+	colors 'GREEN' "Config: '${CONFIG_DIR:-/data/data/com.termux/files/home/.config/tarmux}/${CONFIG_FILE:-config}'"
+	colors 'CYAN' "${config_variables[@]}"
 }
 
 
