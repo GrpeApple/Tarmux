@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.1.1'
+readonly VERSION='v0.4.2'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -211,7 +211,7 @@ backup () {
 	if test -n "${1}"; then
 		backup_name="$(date +"${1}")"
 	else
-		backup_name="$(date +"${config['TARMUX_NAME']}")${config['TARMUX_EXT']}"
+		backup_name="${config['TARMUX_DATA']}/$(date +"${config['TARMUX_NAME']}")${config['TARMUX_EXT']}"
 	fi
 
 	IFS="${config['TARMUX_IFS']}" read -r -a backup_directories <<< "${config['TARMUX_LIST']}"
