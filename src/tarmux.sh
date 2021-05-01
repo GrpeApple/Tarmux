@@ -3,10 +3,13 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.2'
+readonly VERSION='v0.4.2.1'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
+	exit 1
+elif test $(id -u) -eq '0'; then
+	echo 'Running this script as root is very dangerous! Try setting the permissions instead.'
 	exit 1
 fi
 
