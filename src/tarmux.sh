@@ -3,12 +3,12 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.2.2'
+readonly VERSION='v0.4.2.3'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
 	exit 1
-elif test $(id -u) -eq '0'; then
+elif test "$(id -u)" -eq '0'; then
 	echo 'Running this script as root is very dangerous! Try setting the permissions instead.'
 	exit 1
 fi
@@ -235,14 +235,14 @@ EOP
 
 	case "${config['BACKUP_TOOL']}" in
 		'tar')
-			tar ${TAR_OPTIONS} "${config['BACKUP_OPTIONS']}" --create "${backup_directories[@]}" --file="${backup_name}"
+			tar "${TAR_OPTIONS}" "${config['BACKUP_OPTIONS']}" --create "${backup_directories[@]}" --file="${backup_name}"
 			;;
 
 		'pigz'|'zstd'|*)
 			if test "${config['BACKUP_PIPES']}" == 'true'; then
 				eval "tar ${TAR_OPTIONS} --create ${backup_directories[*]} --file='-' | ${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']} > '${backup_name}'"
 			else
-				tar ${TAR_OPTIONS} --create "${backup_directories[@]}" --file="${backup_name}" --use-compress-program="${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']}"
+				tar "${TAR_OPTIONS}" --create "${backup_directories[@]}" --file="${backup_name}" --use-compress-program="${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']}"
 			fi
 			;;
 
@@ -305,14 +305,14 @@ EOP
 
 	case "${config['RESTORE_TOOL']}" in
 		'tar')
-			tar ${TAR_OPTIONS} "${config['RESTORE_OPTIONS']}" --extract "${restore_directories[@]}" --file="${restore_name}"
+			tar "${TAR_OPTIONS}" "${config['RESTORE_OPTIONS']}" --extract "${restore_directories[@]}" --file="${restore_name}"
 			;;
 
 		'pigz'|'zstd')
 			if test "${config['RESTORE_PIPES']}" == 'true'; then
 				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} --decompress '${restore_name}' | tar ${TAR_OPTIONS} --extract ${restore_directories[*]} --file='-'"
 			else
-				tar ${TAR_OPTIONS} --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+				tar "${TAR_OPTIONS}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
 			fi
 			;;
 
@@ -320,7 +320,7 @@ EOP
 			if test "${config['RESTORE_PIPES']}" == 'true'; then
 				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} '${restore_name}' | tar ${TAR_OPTIONS} --extract ${restore_directories[*]} --file='-'"
 			else
-				tar ${TAR_OPTIONS} --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+				tar "${TAR_OPTIONS}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
 			fi
 			;;
 
