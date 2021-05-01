@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.2.1'
+readonly VERSION='v0.4.2.2'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -246,7 +246,7 @@ EOP
 			fi
 			;;
 
-	esac
+	esac || rm -f "${backup_name}"
 
 	cd "${CWD}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
 }
@@ -291,6 +291,7 @@ readarray restore_prompt <<EOP
 	Options: '${config['RESTORE_OPTIONS']}'
 	Environmental variables: '${config['RESTORE_ENV']}'
 	Pipe mode: '$(test "${config['RESTORE_PIPES']}" == 'true' && echo 'true' || echo 'false')'
+	Delete tarmux root before restore: '$(test "${config['DELETE_TARMUX_ROOT']}" == 'true' && echo 'true' || echo 'false')'
 	Root directory: '${config['TARMUX_ROOT']}'
 	Restore: '${restore_name}'
 	Directories: ${restore_directories[@]}
@@ -299,6 +300,8 @@ EOP
 	colors 'CYAN' "${restore_prompt[@]}"
 
 	cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
+
+	test "${config['DELETE_TARMUX_ROOT']}" == 'true' && TAR_OPTIONS+=' --recursive-unlink'
 
 	case "${config['RESTORE_TOOL']}" in
 		'tar')
