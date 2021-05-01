@@ -450,6 +450,11 @@ You can use `-some-long-option` or `-some-long` and it will still work.
 
 ---
 
+# TODO
+- [ ] Parse directories with whitespaces on options
+
+---
+
 # [LICENSE](LICENSE)
 ```
 MIT License

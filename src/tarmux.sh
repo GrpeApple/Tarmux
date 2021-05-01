@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.2.3'
+readonly VERSION='v0.4.2.4'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -118,6 +118,7 @@ if [[ "${INSTALL}" != "${config['INSTALL']}" ]]; then
 fi
 
 # Options for tarmux
+## TODO: Parse directories with whitespaces
 read -r -a opt <<< "$(getopt --options 'hvb::r::cV' --alternative --longoptions 'help,verbose,backup::,restore::,configure,version' --name 'tarmux' --shell 'bash' -- "${@:---}")"
 
 # Working directory
@@ -150,6 +151,7 @@ save_config () {
 # Option management
 options () {
 	while true; do
+		argument="${2:1: -1}"
 		case "${1:---}" in
 			'-h'|'--help') usage; break 1;;
 			'-v'|'--verbose')
@@ -159,7 +161,6 @@ options () {
 				;;
 
 			'-b'|'--backup')
-				argument="${2:1: -1}" # Content
 				if test -z "${argument}"; then
 					backup
 				elif test -w "$(dirname "${argument}")"; then
@@ -173,7 +174,6 @@ options () {
 				;;
 
 			'-r'|'--restore')
-				argument="${2:1: -1}" # Content
 				if test -z "${argument}"; then
 					restore
 				elif test -r "${argument}"; then
