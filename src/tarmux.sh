@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.2.4'
+readonly VERSION='v0.4.3'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -155,7 +155,7 @@ options () {
 		case "${1:---}" in
 			'-h'|'--help') usage; break 1;;
 			'-v'|'--verbose')
-				TAR_OPTIONS="--verbose"
+				TAR_OPTIONS+=( '--verbose' )
 				shift 1
 				continue 1
 				;;
@@ -235,14 +235,14 @@ EOP
 
 	case "${config['BACKUP_TOOL']}" in
 		'tar')
-			tar "${TAR_OPTIONS}" "${config['BACKUP_OPTIONS']}" --create "${backup_directories[@]}" --file="${backup_name}"
+			tar "${TAR_OPTIONS[@]}" "${config['BACKUP_OPTIONS']}" --create "${backup_directories[@]}" --file="${backup_name}"
 			;;
 
 		'pigz'|'zstd'|*)
 			if test "${config['BACKUP_PIPES']}" == 'true'; then
-				eval "tar ${TAR_OPTIONS} --create ${backup_directories[*]} --file='-' | ${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']} > '${backup_name}'"
+				eval "tar ${TAR_OPTIONS[*]} --create ${backup_directories[*]} --file='-' | ${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']} > '${backup_name}'"
 			else
-				tar "${TAR_OPTIONS}" --create "${backup_directories[@]}" --file="${backup_name}" --use-compress-program="${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']}"
+				tar "${TAR_OPTIONS[@]}" --create "${backup_directories[@]}" --file="${backup_name}" --use-compress-program="${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']}"
 			fi
 			;;
 
@@ -301,26 +301,26 @@ EOP
 
 	cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
 
-	test "${config['DELETE_TARMUX_ROOT']}" == 'true' && TAR_OPTIONS+=' --recursive-unlink'
+	test "${config['DELETE_TARMUX_ROOT']}" == 'true' && TAR_OPTIONS+=( ' --recursive-unlink' )
 
 	case "${config['RESTORE_TOOL']}" in
 		'tar')
-			tar "${TAR_OPTIONS}" "${config['RESTORE_OPTIONS']}" --extract "${restore_directories[@]}" --file="${restore_name}"
+			tar "${TAR_OPTIONS[@]}" "${config['RESTORE_OPTIONS']}" --extract "${restore_directories[@]}" --file="${restore_name}"
 			;;
 
 		'pigz'|'zstd')
 			if test "${config['RESTORE_PIPES']}" == 'true'; then
-				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} --decompress '${restore_name}' | tar ${TAR_OPTIONS} --extract ${restore_directories[*]} --file='-'"
+				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} --decompress '${restore_name}' | tar ${TAR_OPTIONS[*]} --extract ${restore_directories[*]} --file='-'"
 			else
-				tar "${TAR_OPTIONS}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+				tar "${TAR_OPTIONS[@]}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
 			fi
 			;;
 
 		*)
 			if test "${config['RESTORE_PIPES']}" == 'true'; then
-				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} '${restore_name}' | tar ${TAR_OPTIONS} --extract ${restore_directories[*]} --file='-'"
+				eval "${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']} '${restore_name}' | tar ${TAR_OPTIONS[*]} --extract ${restore_directories[*]} --file='-'"
 			else
-				tar "${TAR_OPTIONS}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+				tar "${TAR_OPTIONS[@]}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
 			fi
 			;;
 
