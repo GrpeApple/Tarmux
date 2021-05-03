@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.3'
+readonly VERSION='v0.4.3.1'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -301,7 +301,7 @@ EOP
 
 	cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
 
-	test "${config['DELETE_TARMUX_ROOT']}" == 'true' && TAR_OPTIONS+=( ' --recursive-unlink' )
+	test "${config['DELETE_TARMUX_ROOT']}" == 'true' && TAR_OPTIONS+=( '--recursive-unlink' )
 
 	case "${config['RESTORE_TOOL']}" in
 		'tar')
