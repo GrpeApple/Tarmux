@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.4'
+readonly VERSION='v0.4.4.1'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -187,7 +187,7 @@ options () {
 
 			'-c'|'--configure') configure; shift 1; continue 1;;
 			'-V'|'--version') version; shift 1; continue 1;;
-			'--') test -z "${opt[2]}" && usage; shift 1; break 1;; ## Check if no options, then display usage.
+			'--') test -z "${opt[1]}" && usage; shift 1; break 1;; ## Check if no options, then display usage.
 			*) colors 'BRED' 'Unknown error' 1>&2; return 1;; ## This should not happen.
 		esac
 	done
