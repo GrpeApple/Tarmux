@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.3.1'
+readonly VERSION='v0.4.3.2'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -1083,7 +1083,7 @@ EOV
 
 
 # Check if backup data is not writable and can request permission.
-while test \( \! -w "${config['TARMUX_DATA']}" \) -a \( -n "${config['REQUEST_STORAGE']}" \); do
+while test \( \! -w "${config['TARMUX_DATA']}" \) -a \( "${config['REQUEST_STORAGE']}" == 'true' \); do
 	colors 'BCYAN' "No write permission on ${config['TARMUX_DATA']}. Requesting storage permission..."
 	termux-setup-storage
 done
