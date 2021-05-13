@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.3.2'
+readonly VERSION='v0.4.4'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -118,8 +118,8 @@ if [[ "${INSTALL}" != "${config['INSTALL']}" ]]; then
 fi
 
 # Options for tarmux
-## TODO: Parse directories with whitespaces
 read -r -a opt <<< "$(getopt --options 'hvb::r::cV' --alternative --longoptions 'help,verbose,backup::,restore::,configure,version' --name 'tarmux' --shell 'bash' -- "${@:---}")"
+eval set -- "${opt[@]}"
 
 # Working directory
 CWD="${PWD}"
@@ -151,7 +151,6 @@ save_config () {
 # Option management
 options () {
 	while true; do
-		argument="${2:1: -1}"
 		case "${1:---}" in
 			'-h'|'--help') usage; break 1;;
 			'-v'|'--verbose')
@@ -161,12 +160,12 @@ options () {
 				;;
 
 			'-b'|'--backup')
-				if test -z "${argument}"; then
+				if test -z "${2}"; then
 					backup
-				elif test -w "$(dirname "${argument}")"; then
-					backup "${argument}"
+				elif test \( -w "$(dirname "${2}")" \) -o \( -w "${2}" \); then
+					backup "${2}"
 				else
-					colors 'BRED' "File '${argument}' is not writable." 1>&2
+					colors 'BRED' "File '${2}' is not writable." 1>&2
 					return 1
 				fi
 				shift 2
@@ -174,12 +173,12 @@ options () {
 				;;
 
 			'-r'|'--restore')
-				if test -z "${argument}"; then
+				if test -z "${2}"; then
 					restore
-				elif test -r "${argument}"; then
-					restore "${argument}"
+				elif test -r "${2}"; then
+					restore "${2}"
 				else
-					colors 'BRED' "File '${argument}' does not exist or unreadable." 1>&2
+					colors 'BRED' "File '${2}' does not exist or unreadable." 1>&2
 					return 1
 				fi
 				shift 2
@@ -188,7 +187,7 @@ options () {
 
 			'-c'|'--configure') configure; shift 1; continue 1;;
 			'-V'|'--version') version; shift 1; continue 1;;
-			'--') test -z "${opt[1]}" && usage; shift 1; break 1;; ## Check if no options, then display usage.
+			'--') test -z "${opt[2]}" && usage; shift 1; break 1;; ## Check if no options, then display usage.
 			*) colors 'BRED' 'Unknown error' 1>&2; return 1;; ## This should not happen.
 		esac
 	done
@@ -1089,5 +1088,5 @@ while test \( \! -w "${config['TARMUX_DATA']}" \) -a \( "${config['REQUEST_STORA
 done
 
 save_config &&
-options "${opt[@]:---}" &&
+options "${@}" &&
 save_config
