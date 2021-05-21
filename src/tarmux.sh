@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.4.1'
+readonly VERSION='v0.4.4.2'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -257,18 +257,18 @@ restore () {
 		while true; do
 			local glob
 			glob="$(compgen -G './'* &>/dev/null && echo '1')"
-			select filename in 'clear' 'exit' "${PWD}" './..' ${glob:+./*}; do
+			select filename in 'clear' 'exit' "${PWD}" '..' ${glob:+*}; do
 				case "${filename},${REPLY}" in
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting restoring Termux...'; return 1;;
-					'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
-					'./..',*|*,'./..') cd .. || true; break 1;;
-					'./'*,*|*,'./'*)
-						if test -f "${filename:-${REPLY}}"; then
+					'/',*|*,'/') read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+					'..',*|*,'..') cd .. || true; break 1;;
+					*,*)
+						if test -f "./${filename:-${REPLY}}"; then
 							restore_name="$(realpath "${filename:-${REPLY}}")"
 							break 2
 						else
-							cd "${filename:-${REPLY}}" || true
+							cd "./${filename:-${REPLY}}" || true
 							break 1
 						fi
 						;;
@@ -693,7 +693,7 @@ configure () {
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
-											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
+											select directory in 'select' 'clear' 'exit' "${PWD}" '..' ${glob:+*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
 														colors 'BWHITE' "Program name? ('$(basename "${config['INSTALL']}")'):"
@@ -709,9 +709,9 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
-													'./..',*|*,'./..') cd .. || true; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || true; break 1;;
+													'/'*,*|*,'/'*) read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+													'..',*|*,'..') cd .. || true; break 1;;
+													*,*) cd "./${directory:-${REPLY}}" || true; break 1;;
 												esac
 											done
 										done
@@ -752,7 +752,7 @@ configure () {
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
-											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
+											select directory in 'select' 'clear' 'exit' "${PWD}" '..' ${glob:+*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
 														local TARMUX_ROOT="${PWD}"
@@ -765,9 +765,9 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup root directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
-													'./..',*|*,'./..') cd .. || true; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' 1>&2; break 1;;
+													'/'*,*|*,'/'*) read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+													'..',*|*,'..') cd .. || true; break 1;;
+													*,*) cd "./${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' 1>&2; break 1;;
 												esac
 											done
 										done
@@ -804,7 +804,7 @@ configure () {
 										while true; do
 											local glob
 											glob="$(compgen -G './'*'/' &>/dev/null && echo '1')"
-											select directory in 'select' 'clear' 'exit' "${PWD}" './..' ${glob:+./*/}; do
+											select directory in 'select' 'clear' 'exit' "${PWD}" '..' ${glob:+*/}; do
 												case "${directory},${REPLY}" in
 													'select',*|*,'select')
 														local TARMUX_DATA="${PWD}"
@@ -817,9 +817,9 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -p '/' -r -e; cd "/${REPLY}" || true; break 1;;
-													'./..',*|*,'./..') cd ..; break 1;;
-													'./'*,*|*,'./'*) cd "${directory:-${REPLY}}" || true; break 1;;
+													'/'*,*|*,'/'*) read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+													'..',*|*,'..') cd ..; break 1;;
+													*,*) cd "./${directory:-${REPLY}}" || true; break 1;;
 												esac
 											done
 										done
