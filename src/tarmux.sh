@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.4.2'
+readonly VERSION='v0.4.4.3'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -261,10 +261,20 @@ restore () {
 				case "${filename},${REPLY}" in
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting restoring Termux...'; return 1;;
-					'/',*|*,'/') read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+					'/',*|*,'/')
+						read -e -i'/' # No -r to accept escaping
+						if test ! -d "${REPLY}"; then
+							restore_name="$(realpath "${REPLY}")"
+							break 2
+						else
+							cd "${REPLY}" || true
+							break 1
+						fi
+						;;
+
 					'..',*|*,'..') cd .. || true; break 1;;
 					*,*)
-						if test -f "./${filename:-${REPLY}}"; then
+						if test ! -d "./${filename:-${REPLY}}"; then
 							restore_name="$(realpath "${filename:-${REPLY}}")"
 							break 2
 						else
@@ -709,7 +719,7 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+													'/',*|*,'/') read -e -i'/'; cd "${REPLY}" || true; break 1;; # No -r to accept escaping
 													'..',*|*,'..') cd .. || true; break 1;;
 													*,*) cd "./${directory:-${REPLY}}" || true; break 1;;
 												esac
@@ -765,7 +775,7 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup root directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+													'/',*|*,'/') read -e -i'/'; cd "${REPLY}" || true; break 1;; # No -r to accept escaping
 													'..',*|*,'..') cd .. || true; break 1;;
 													*,*) cd "./${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' 1>&2; break 1;;
 												esac
@@ -817,7 +827,7 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
-													'/'*,*|*,'/'*) read -r -e -i'/'; cd "${REPLY}" || true; break 1;;
+													'/',*|*,'/') read -e -i'/'; cd "${REPLY}" || true; break 1;; # No -r to accept escaping
 													'..',*|*,'..') cd ..; break 1;;
 													*,*) cd "./${directory:-${REPLY}}" || true; break 1;;
 												esac
@@ -1087,6 +1097,4 @@ while test \( \! -w "${config['TARMUX_DATA']}" \) -a \( "${config['REQUEST_STORA
 	termux-setup-storage
 done
 
-save_config &&
-options "${@}" &&
-save_config
+options "${@}"
