@@ -387,7 +387,7 @@ You can use `-some-long-option` or `-some-long` and it will still work.
 		<td>
 			<code>--help</code>
 		</td>
-		<td>Display help message</td>
+		<td>Display help message, then stop parsing the next following options</td>
 	</tr>
 	<tr>
 		<td>
@@ -396,9 +396,7 @@ You can use `-some-long-option` or `-some-long` and it will still work.
 		<td>
 			<code>--verbose</code>
 		</td>
-		<td>
-			Verbose output of <code>tar</code>
-		</td>
+		<td>Verbose output of the next following options</td>
 	</tr>
 	<tr>
 		<td>
@@ -452,6 +450,7 @@ You can use `-some-long-option` or `-some-long` and it will still work.
 
 # TODO
 - [x] Parse directories with whitespaces on options
+- [ ] Add bash completion
 
 ---
 
