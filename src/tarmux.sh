@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.4.3'
+readonly VERSION='v0.4.4.4'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -252,6 +252,7 @@ EOP
 
 # Restore
 restore () {
+	## File explorer
 	explorer () {
 		cd "$(dirname "${config['TARMUX_DATA']}")" || colors 'BRED' 'Error going to current config tarmux data directory.' 1>&2
 		while true; do
@@ -262,7 +263,8 @@ restore () {
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting restoring Termux...'; return 1;;
 					'/',*|*,'/')
-						read -e -i'/' # No -r to accept escaping
+						read -e -i'/' ### No -r to accept escaping
+						REPLY="$(echo "${REPLY}" | xargs)" ### Trim whitespace
 						if test ! -d "${REPLY}"; then
 							restore_name="$(realpath "${REPLY}")"
 							break 2
@@ -274,11 +276,12 @@ restore () {
 
 					'..',*|*,'..') cd .. || true; break 1;;
 					*,*)
-						if test ! -d "./${filename:-${REPLY}}"; then
-							restore_name="$(realpath "${filename:-${REPLY}}")"
+						filename="$(echo "${filename:-${REPLY}}" | xargs)" ### Trim whitespace
+						if test ! -d "./${filename}"; then
+							restore_name="$(realpath "${filename}")"
 							break 2
 						else
-							cd "./${filename:-${REPLY}}" || true
+							cd "./${filename}" || true
 							break 1
 						fi
 						;;
@@ -719,9 +722,15 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting installation directory explorer configuration...'; break 2;;
-													'/',*|*,'/') read -e -i'/'; cd "${REPLY}" || true; break 1;; # No -r to accept escaping
+													'/',*|*,'/')
+														read -e -i'/' ### No -r to accept escaping
+														REPLY="$(echo "${REPLY}" | xargs)" ### Trim whitespace
+														cd "${REPLY}" || true
+														break 1
+														;;
+
 													'..',*|*,'..') cd .. || true; break 1;;
-													*,*) cd "./${directory:-${REPLY}}" || true; break 1;;
+													*,*) directory="$(echo "${directory:-${REPLY}}" | xargs)"; cd "./${directory}" || true; break 1;; ### Trim whitespace
 												esac
 											done
 										done
@@ -775,9 +784,15 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup root directory explorer configuration...'; break 2;;
-													'/',*|*,'/') read -e -i'/'; cd "${REPLY}" || true; break 1;; # No -r to accept escaping
+													'/',*|*,'/')
+														read -e -i'/' ### No -r to accept escaping
+														REPLY="$(echo "${REPLY}" | xargs)" ### Trim whitespace
+														cd "${REPLY}" || true
+														break 1
+														;;
+
 													'..',*|*,'..') cd .. || true; break 1;;
-													*,*) cd "./${directory:-${REPLY}}" || colors 'BRED' 'Unknown error' 1>&2; break 1;;
+													*,*) directory="$(echo "${directory:-${REPLY}}" | xargs)"; cd "./${directory}" || true; break 1;; ### Trim whitespace
 												esac
 											done
 										done
@@ -827,9 +842,15 @@ configure () {
 
 													'clear',*|*,'clear'|*,) clear; break 1;;
 													'exit',*|*,'exit') colors 'BRED' 'Exiting tarmux backup data directory explorer configuration...'; break 2;;
-													'/',*|*,'/') read -e -i'/'; cd "${REPLY}" || true; break 1;; # No -r to accept escaping
-													'..',*|*,'..') cd ..; break 1;;
-													*,*) cd "./${directory:-${REPLY}}" || true; break 1;;
+													'/',*|*,'/')
+														read -e -i'/' ### No -r to accept escaping
+														REPLY="$(echo "${REPLY}" | xargs)" ### Trim whitespace
+														cd "${REPLY}" || true
+														break 1
+														;;
+
+													'..',*|*,'..') cd .. || true; break 1;;
+													*,*) directory="$(echo "${directory:-${REPLY}}" | xargs)"; cd "./${directory}" || true; break 1;; ### Trim whitespace
 												esac
 											done
 										done
