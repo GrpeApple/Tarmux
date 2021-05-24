@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.4.5'
+readonly VERSION='v0.4.4.6'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -196,12 +196,15 @@ options () {
 # Help message
 usage () {
 readarray options <<EOU
-	-h|-help		Display this help usage
-	-v|-verbose		Verbose output
-	-b|-backup[=BACKUP]	Backup
-	-r|-restore[=BACKUP]	Restore
-	-c|-configure		Configure
-	-V|-version		Display version and information
+	-[h|[-]help]			Display this help usage; exit immediately and not parsing the next following options
+	-[v|[-]verbose]			Enable verbose output for the next following options
+	-[b|[-]backup][=BACKUP]		Backup to BACKUP file
+	-[r|[-]restore][=BACKUP]	Restore from RESTORE file
+	-[c|[-]configure]		Configure your config
+	-[V|[-]version]			Display version and information
+
+		BACKUP			Can be anything; has control characters from date
+		RESTORE			Can be anywhere
 EOU
 	colors 'BCYAN' "Usage: $(basename "${config['INSTALL']}") -[[h|[-]help]|[[v|[-]verbose]]|[b|[-]backup[=BACKUP]]|[r|[-]restore[=BACKUP]]|[c|[-]configure]|[V|[-]version]]"
 	colors 'BBLUE' 'Options:'; printf '\n'

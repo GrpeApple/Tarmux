@@ -1,4 +1,4 @@
-# `tarmux`
+<h1>`tarmux` [![https://img.shields.io/badge/version-v0.4.4.6-brightgreen]](https://github.com/GrpeApple/tarmux/releases/tag/v0.4.4.6)</h1>
 Tool to backup files on Termux with `tar`.
 
 *Please lowercase `tarmux` and format it as code if possible; if the first word is at the start of a sentence you may not lowercase. This is to avoid confusion with Termux and `tarmux`.*
@@ -162,7 +162,7 @@ You are to configure with `tarmux -c`.
 					<td>
 						<code>Backup</code>
 					</td>
-					<td>Configuration for your backup tools</td>
+					<td>Configuration for your backing up</td>
 					<td>
 						<table>
 						<thead>
@@ -177,7 +177,7 @@ You are to configure with `tarmux -c`.
 									<code>Backup tool</code>
 								</td>
 								<td>
-									Your backup tools; backup tools are either enabled with options (<code>-I</code> or <code>--use-compress-program=</code>; or built-in options such as <code>-J</code> or <code>-xz</code>.) or pipes.
+									Backup tools are either enabled with options (<code>-I</code> or <code>--use-compress-program=</code>; or built-in options such as <code>-J</code> or <code>-xz</code>.) or pipes.
 								</td>
 							</tr>
 							<tr>
@@ -237,7 +237,7 @@ You are to configure with `tarmux -c`.
 									<code>Restore tool</code>
 								</td>
 								<td>
-									Your restore tools; restore tools are either enabled with options (<code>-I</code> or <code>--use-compress-program=</code>; or built-in options such as <code>-J</code> or <code>-xz</code>.) or pipes.
+									Restore tools are either enabled with options (<code>-I</code> or <code>--use-compress-program=</code>; or built-in options such as <code>-J</code> or <code>-xz</code>.) or pipes.
 								</td>
 							</tr>
 							<tr>
@@ -340,7 +340,6 @@ You are to configure with `tarmux -c`.
 						<code>home[separator]usr</code>
 					</td>
 					<td></td>
-				</tr>
 				</tr>
 				<tr>
 					<td>
