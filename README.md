@@ -160,6 +160,50 @@ You are to configure with `tarmux -c`.
 				</tr>
 				<tr>
 					<td>
+						<code>Tar</code>
+					</td>
+					<td>
+						Configuration for <code>tar</code>
+					</td>
+					<td>
+						<table>
+						<thead>
+							<tr>
+								<th>Configuration</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>
+									<code>Tool</code>
+								</td>
+								<td>
+									<code>tar</code> tool to use
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Options</code>
+								</td>
+								<td>
+									Options for the <code>tar</code> tool
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<code>Environment variables</code>
+								</td>
+								<td>
+									Environment variables for the <code>tar</code> tool
+								</td>
+							</tr>
+						</tbody>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
 						<code>Backup</code>
 					</td>
 					<td>Configuration for your backing up</td>
@@ -192,7 +236,7 @@ You are to configure with `tarmux -c`.
 							</tr>
 							<tr>
 								<td>
-									<code>Backup environmental variables</code>
+									<code>Backup environment variables</code>
 								</td>
 								<td>
 									Environmental variables for the backup tool.<br>
@@ -249,7 +293,7 @@ You are to configure with `tarmux -c`.
 							</tr>
 							<tr>
 								<td>
-									<code>Restore environmental variables</code>
+									<code>Restore environment variables</code>
 								</td>
 								<td>
 									Environmental variables for the restore tool.<br>
@@ -266,16 +310,6 @@ You are to configure with `tarmux -c`.
 									Otherwise, <code>tarmux</code> uses a pipe to restore.<br>
 									For example:
 									<code>zstd -d --ultra -22 --threads=200 --stdout /storage/emulated/0/Backups/Termux/backup/97490.tar.zst | tar -xf - termux-fs</code>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<code>Always delete tarmux root directory before restore</code>
-								</td>
-								<td>
-									When <code>tar</code> restores, any new changes will not be touched.<br>
-									Because of this, it will only restore those that it backed up; allowing unnecessary files.<br>
-									Deleting <code>tarmux</code>'s root directory and restoring it will not allow unnecessary files.<br>
 								</td>
 							</tr>
 						</tbody>

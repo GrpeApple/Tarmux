@@ -3,7 +3,7 @@
 # Shellcheck
 # shellcheck source=/dev/null
 
-readonly VERSION='v0.4.4.7'
+readonly VERSION='v0.4.5'
 
 if test \( "${BASH_VERSINFO[0]}" -lt '4' \) -a \( "${BASH_VERSINFO[1]}" -lt '4' \); then
 	echo "Bash version ${BASH_VERSION} is too low! Need bash version 4.4 or higher."
@@ -50,6 +50,9 @@ esac
 ## tarmux preferences
 declare +r -A config=(
 	['INSTALL']="$(realpath "${0:-./tarmux}")"
+	['TAR_TOOL']='tar'
+	['TAR_OPTIONS']=''
+	['TAR_ENV']=''
 	['BACKUP_TOOL']='tar'
 	['BACKUP_OPTIONS']='-z'
 	['BACKUP_ENV']=''
@@ -58,7 +61,6 @@ declare +r -A config=(
 	['RESTORE_OPTIONS']='-z'
 	['RESTORE_ENV']=''
 	['RESTORE_PIPE']='false'
-	['DELETE_TARMUX_ROOT']='true'
 	['TARMUX_ROOT']='/data/data/com.termux/files'
 	['TARMUX_DATA']='/storage/emulated/0/Download'
 	['TARMUX_NAME']='termux_backup_%Y-%m-%d_%H-%M-%S-%N'
@@ -72,15 +74,17 @@ declare +r -A config=(
 ## tarmux preferences name
 declare -r -A config_name=(
 	['INSTALL']='Installation directory'
+	['TAR_TOOL']='tar tool'
+	['TAR_OPTIONS']='tar options'
+	['TAR_ENV']='tar environment variables'
 	['BACKUP_TOOL']='Backup tool'
 	['BACKUP_OPTIONS']='Backup options'
-	['BACKUP_ENV']='Backup environmental variables'
+	['BACKUP_ENV']='Backup environment variables'
 	['BACKUP_PIPE']='Always use pipes for backup'
 	['RESTORE_TOOL']='Restore tool'
 	['RESTORE_OPTIONS']='Restore options'
-	['RESTORE_ENV']='Restore environmental variables'
+	['RESTORE_ENV']='Restore environment variables'
 	['RESTORE_PIPE']='Always use pipes for restore'
-	['DELETE_TARMUX_ROOT']='Always delete tarmux root directory before restore'
 	['TARMUX_ROOT']='Tarmux backup root directory'
 	['TARMUX_DATA']='Tarmux backup data directory'
 	['TARMUX_NAME']='Tarmux backup name'
@@ -132,9 +136,10 @@ ACTIONS=('install' 'uninstall' 'tarmux')
 PACKAGES=('tar' 'pigz' 'zstd')
 
 ## Configuration for tarmux
-CONFIGURATIONS=('Installation directory' 'Backup' 'Restore' 'tarmux backup root directory' 'tarmux backup data directory' 'tarmux backup name' 'tarmux backup extension' 'tarmux backup directories' 'tarmux backup directories separator' 'Always ask storage permission' 'Always save config' 'save' 'reset')
-BACKUP_CONFIGURATIONS=('Backup tool' 'Backup options' 'Backup environmental variables' 'Always use pipes for backup')
-RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environmental variables' 'Always use pipes for restore' 'Always delete tarmux root directory before restore')
+CONFIGURATIONS=('Installation directory' 'Tar' 'Backup' 'Restore' 'tarmux backup root directory' 'tarmux backup data directory' 'tarmux backup name' 'tarmux backup extension' 'tarmux backup directories' 'tarmux backup directories separator' 'Always ask storage permission' 'Always save config' 'save' 'reset')
+TAR_CONFIGURATIONS=('Tool' 'Options' 'Environment variables')
+BACKUP_CONFIGURATIONS=('Backup tool' 'Backup options' 'Backup environment variables' 'Always use pipes for backup')
+RESTORE_CONFIGURATIONS=('Restore tool' 'Restore options' 'Restore environment variables' 'Always use pipes for restore')
 BACKUP_TOOLS=('tar' 'pigz' 'zstd')
 RESTORE_TOOLS=('tar' 'pigz' 'zstd')
 
@@ -220,6 +225,9 @@ backup () {
 	fi
 	backup_name="$(realpath "${backup_name}")"
 
+	read -r -a tar_env <<< "${config['TAR_ENV']}"
+	read -r -a tar_options <<< "${config['TAR_OPTIONS']} ${TAR_OPTIONS[@]}"
+	read -r -a tar_tool <<< "${config['TAR_TOOL']}"
 	IFS="${config['TARMUX_IFS']}" read -r -a backup_directories <<< "${config['TARMUX_LIST']}"
 	if test "${config['BACKUP_PIPES']}" == 'true'; then
 		read -r -a backup_env <<< "${config['BACKUP_ENV']}"
@@ -227,9 +235,12 @@ backup () {
 		read -r -a backup_options <<< "${config['BACKUP_OPTIONS']}"
 	fi
 readarray backup_prompt <<EOP
+	Tar tool: '${config['TAR_TOOL']}'
+	Tar options: '${config['TAR_OPTIONS']}'
+	Tar environment variables: '${config['TAR_ENV']}'
 	Tool: '${config['BACKUP_TOOL']}'
 	Options: '${config['BACKUP_OPTIONS']}'
-	Environmental variables: '${config['BACKUP_ENV']}'
+	Environment variables: '${config['BACKUP_ENV']}'
 	Pipe mode: '$(test "${config['BACKUP_PIPES']}" == 'true' && echo 'true' || echo 'false')'
 	Root directory: '${config['TARMUX_ROOT']}'
 	Backup location: '${config['TARMUX_DATA']}'
@@ -243,14 +254,14 @@ EOP
 
 	case "${config['BACKUP_TOOL']}" in
 		'tar')
-			tar "${TAR_OPTIONS[@]}" "${config['BACKUP_OPTIONS']}" --create "${backup_directories[@]}" --file="${backup_name}"
+			"${tar_env[@]}" "${tar_tool}" "${tar_options[@]}" "${config['BACKUP_OPTIONS']}" --create "${backup_directories[@]}" --file="${backup_name}"
 			;;
 
 		'pigz'|'zstd'|*)
 			if test "${config['BACKUP_PIPES']}" == 'true'; then
-				tar "${TAR_OPTIONS[@]}" --create "${backup_directories[@]}" --file='-' | "${backup_env[@]}" "${backup_tool[@]}" "${backup_options[@]}" > "${backup_name}"
+				"${tar_env[@]}" "${tar_tool}" "${tar_options[@]}" --create "${backup_directories[@]}" --file='-' | "${backup_env[@]}" "${backup_tool[@]}" "${backup_options[@]}" > "${backup_name}"
 			else
-				tar "${TAR_OPTIONS[@]}" --create "${backup_directories[@]}" --file="${backup_name}" --use-compress-program="${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']}"
+				"${tar_env[@]}" "${tar_tool}" "${tar_options[@]}" --create "${backup_directories[@]}" --file="${backup_name}" --use-compress-program="${config['BACKUP_ENV']} ${config['BACKUP_TOOL']} ${config['BACKUP_OPTIONS']}"
 			fi
 			;;
 
@@ -306,6 +317,9 @@ restore () {
 		explorer || return 1
 	fi
 
+	read -r -a tar_env <<< "${config['TAR_ENV']}"
+	read -r -a tar_options <<< "${config['TAR_OPTIONS']} ${TAR_OPTIONS[@]}"
+	read -r -a tar_tool <<< "${config['TAR_TOOL']}"
 	IFS="${config['TARMUX_IFS']}" read -r -a restore_directories <<< "${config['TARMUX_LIST']}"
 	if test "${config['RESTORE_PIPES']}" == 'true'; then
 		read -r -a restore_env <<< "${config['RESTORE_ENV']}"
@@ -313,11 +327,13 @@ restore () {
 		read -r -a restore_options <<< "${config['RESTORE_OPTIONS']}"
 	fi
 readarray restore_prompt <<EOP
+	Tar tool: '${config['TAR_TOOL']}'
+	Tar options: '${config['TAR_OPTIONS']}'
+	Tar environment variables: '${config['TAR_ENV']}'
 	Tool: '${config['RESTORE_TOOL']}'
 	Options: '${config['RESTORE_OPTIONS']}'
-	Environmental variables: '${config['RESTORE_ENV']}'
+	Environment variables: '${config['RESTORE_ENV']}'
 	Pipe mode: '$(test "${config['RESTORE_PIPES']}" == 'true' && echo 'true' || echo 'false')'
-	Delete tarmux root before restore: '$(test "${config['DELETE_TARMUX_ROOT']}" == 'true' && echo 'true' || echo 'false')'
 	Root directory: '${config['TARMUX_ROOT']}'
 	Restore: '${restore_name}'
 	Directories: ${restore_directories[@]}
@@ -327,26 +343,24 @@ EOP
 
 	cd "${config['TARMUX_ROOT']}" || colors 'BRED' 'Terminating...' 1>&2 || exit 1
 
-	test "${config['DELETE_TARMUX_ROOT']}" == 'true' && TAR_OPTIONS+=( '--recursive-unlink' )
-
 	case "${config['RESTORE_TOOL']}" in
 		'tar')
-			tar "${TAR_OPTIONS[@]}" "${config['RESTORE_OPTIONS']}" --extract "${restore_directories[@]}" --file="${restore_name}"
+			"${tar_env[@]}" "${tar_tool}" "${tar_options[@]}" "${config['RESTORE_OPTIONS']}" --extract "${restore_directories[@]}" --file="${restore_name}"
 			;;
 
 		'pigz'|'zstd')
 			if test "${config['RESTORE_PIPES']}" == 'true'; then
-				"${restore_env[@]}" "${restore_tool[@]}" "${restore_options[@]}" --decompress "${restore_name}" | tar "${TAR_OPTIONS[@]}" --extract "${restore_directories[@]}" --file='-'
+				"${restore_env[@]}" "${restore_tool[@]}" "${restore_options[@]}" --decompress "${restore_name}" | tar "${tar_options[@]}" --extract "${restore_directories[@]}" --file='-'
 			else
-				tar "${TAR_OPTIONS[@]}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+				"${tar_env[@]}" "${tar_tool}" "${tar_options[@]}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
 			fi
 			;;
 
 		*)
 			if test "${config['RESTORE_PIPES']}" == 'true'; then
-				"${restore_env[@]}" "${restore_tool[@]}" "${restore_options[@]}" "${restore_name}" | tar "${TAR_OPTIONS[@]}" --extract "${restore_directories[@]}" --file='-'
+				"${restore_env[@]}" "${restore_tool[@]}" "${restore_options[@]}" "${restore_name}" | tar "${tar_options[@]}" --extract "${restore_directories[@]}" --file='-'
 			else
-				tar "${TAR_OPTIONS[@]}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
+				"${tar_env[@]}" "${tar_tool}" "${tar_options[@]}" --extract "${restore_directories[@]}" --file="${restore_name}" --use-compress-program="${config['RESTORE_ENV']} ${config['RESTORE_TOOL']} ${config['RESTORE_OPTIONS']}"
 			fi
 			;;
 
@@ -387,6 +401,90 @@ configure () {
 					'zstd',*|*,'zstd') colors 'BWHITE' 'Uninstalling zstd...'; apt autoremove zstd && colors 'BGREEN' 'Done!'; break 1;;
 					'clear',*|*,'clear'|*,) clear; break 1;;
 					'exit',*|*,'exit') colors 'BRED' 'Exiting uninstallation...'; break 2;;
+					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
+				esac
+			done
+		done
+	}
+	## Tar configuration
+	tarConf () {
+		while true; do
+			select configuration in "${TAR_CONFIGURATIONS[@]}" 'clear' 'exit'; do
+				case "${configuration},${REPLY}" in
+					'Tool',*|*,'Tool')
+						while true; do
+							select option in 'change' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'change',*|*,'change')
+										colors 'BWHITE' "Tar tool to use? ('${config['TAR_TOOL']}'):"
+										read -p ' ' -r -e TAR_TOOL
+										colors 'BWHITE' "Changing tar tool '${config['TAR_TOOL']}' to '${TAR_TOOL:-${config['TAR_TOOL']}}'..."
+										config['TAR_TOOL']="${TAR_TOOL:-${config['TAR_TOOL']}}"
+										save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TAR_TOOL']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting tar tool configuration...'; break 2;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Options',*|*,'Options')
+						while true; do
+							select option in 'change' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'change',*|*,'change')
+										colors 'BWHITE' "What tar options? ('${config['TAR_OPTIONS']}'):"
+										read -p ' ' -r -e TAR_OPTIONS
+										colors 'BWHITE' "Changing tar options '${config['TAR_OPTIONS']}' to '${TAR_OPTIONS-${config['TAR_OPTIONS']}}'..."
+										config['TAR_OPTIONS']="${TAR_OPTIONS-${config['TAR_OPTIONS']}}"
+										save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TAR_OPTIONS']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting backup options configuration...'; break 2;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'Environment variables',*|*,'Environment variables')
+						while true; do
+							select option in 'change' 'view' 'clear' 'exit'; do
+								case "${option},${REPLY}" in
+									'change',*|*,'change')
+										colors 'BWHITE' "What tar environment variables? ('${config['TAR_ENV']}'):"
+										read -p ' ' -r -e TAR_ENV
+										colors 'BWHITE' "Changing tar environment variables '${config['TAR_ENV']}' to '${TAR_ENV-${config['TAR_ENV']}}'..."
+										config['TAR_ENV']="${TAR_ENV-${config['TAR_ENV']}}"
+										save_config &&
+										colors 'BGREEN' 'Done!'
+										break 1
+										;;
+
+									'view',*|*,'view') colors 'BCYAN' "Current: '${config['TAR_ENV']}'"; break 1;;
+									'clear',*|*,'clear'|*,) clear; break 1;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting tar environment variables configuration...'; break 2;;
+									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
+								esac
+							done
+						done
+						break 1
+						;;
+
+					'clear',*|*,'clear'|*,) clear; break 1;;
+					'exit',*|*,'exit') colors 'BRED' 'Exiting tar configuration...'; break 2;;
 					*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 				esac
 			done
@@ -472,14 +570,14 @@ configure () {
 						break 1
 						;;
 
-					'Backup environmental variables',*|*,'Backup environmental variables')
+					'Backup environment variables',*|*,'Backup environment variables')
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "What backup environmental variables? ('${config['BACKUP_ENV']}'):"
+										colors 'BWHITE' "What backup environment variables? ('${config['BACKUP_ENV']}'):"
 										read -p ' ' -r -e BACKUP_ENV
-										colors 'BWHITE' "Changing backup enviornmental variables '${config['BACKUP_ENV']}' to '${BACKUP_ENV-${config['BACKUP_ENV']}}'..."
+										colors 'BWHITE' "Changing backup environment variables '${config['BACKUP_ENV']}' to '${BACKUP_ENV-${config['BACKUP_ENV']}}'..."
 										config['BACKUP_ENV']="${BACKUP_ENV-${config['BACKUP_ENV']}}"
 										save_config &&
 										colors 'BGREEN' 'Done!'
@@ -488,7 +586,7 @@ configure () {
 
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['BACKUP_ENV']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
-									'exit',*|*,'exit') colors 'BRED' 'Exiting backup environmental variables configuration...'; break 2;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting backup environment variables configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
@@ -613,14 +711,14 @@ configure () {
 						break 1
 						;;
 
-					'Restore environmental variables',*|*,'Restore environmental variables')
+					'Restore environment variables',*|*,'Restore environment variables')
 						while true; do
 							select option in 'change' 'view' 'clear' 'exit'; do
 								case "${option},${REPLY}" in
 									'change',*|*,'change')
-										colors 'BWHITE' "What restore environmental variables? ('${config['RESTORE_ENV']}'):"
+										colors 'BWHITE' "What restore environment variables? ('${config['RESTORE_ENV']}'):"
 										read -p ' ' -r -e RESTORE_ENV
-										colors 'BWHITE' "Changing restore enviornmental variables '${config['RESTORE_ENV']}' to '${RESTORE_ENV-${config['RESTORE_ENV']}}'..."
+										colors 'BWHITE' "Changing restore environment variables '${config['RESTORE_ENV']}' to '${RESTORE_ENV-${config['RESTORE_ENV']}}'..."
 										config['RESTORE_ENV']="${RESTORE_ENV-${config['RESTORE_ENV']}}"
 										save_config &&
 										colors 'BGREEN' 'Done!'
@@ -629,7 +727,7 @@ configure () {
 
 									'view',*|*,'view') colors 'BCYAN' "Current: '${config['RESTORE_ENV']}'"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
-									'exit',*|*,'exit') colors 'BRED' 'Exiting restore environmental variables configuration...'; break 2;;
+									'exit',*|*,'exit') colors 'BRED' 'Exiting restore environment variables configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
@@ -660,36 +758,6 @@ configure () {
 									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['RESTORE_PIPES']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
 									'clear',*|*,'clear'|*,) clear; break 1;;
 									'exit',*|*,'exit') colors 'BRED' 'Exiting using pipes for restoring configuration...'; break 2;;
-									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
-								esac
-							done
-						done
-						break 1
-						;;
-
-					'Always delete tarmux root directory before restore',*|*,'Always delete tarmux root directory before restore')
-						while true; do
-							select option in 'enable' 'disable' 'view' 'clear' 'exit'; do
-								case "${option},${REPLY}" in
-									'enable',*|*,'enable')
-										colors 'BGREEN' 'Enabling...'
-										config['DELETE_TARMUX_ROOT']='true'
-										save_config &&
-										colors 'BGREEN' 'Done!'
-										break 1
-										;;
-
-									'disable',*|*,'disable')
-										colors 'BRED' 'Disabling...'
-										config['DELETE_TARMUX_ROOT']='false'
-										save_config &&
-										colors 'BGREEN' 'Done!'
-										break 1
-										;;
-
-									'view',*|*,'view') colors 'BCYAN' "Current: $(test "${config['DELETE_TARMUX_ROOT']}" == 'true' && echo 'true' || echo 'false')"; break 1;;
-									'clear',*|*,'clear'|*,) clear; break 1;;
-									'exit',*|*,'exit') colors 'BRED' 'Exiting deletion of tarmux root directory before restoring configuration...'; break 2;;
 									*) colors 'BRED' 'Unknown option' 1>&2; break 1;;
 								esac
 							done
@@ -772,6 +840,7 @@ configure () {
 						break 1
 						;;
 
+					'Tar',*|*,'Tar') tarConf; break 1;;
 					'Backup',*|*,'Backup') backupConf; break 1;;
 					'Restore',*|*,'Restore') restoreConf; break 1;;
 					'tarmux backup root directory',*|*,'tarmux backup root directory')
