@@ -10,9 +10,8 @@ CPFLAGS:=
 SHEBANG:=termux-fix-shebang
 SHEBANGFLAGS:=
 
-CHMOD:=chmod
-CHMODFLAGS:=
-CHMODEXECUTABLE:=u+x
+INSTALL:=install
+INSTALLFLAGS:=--mode=700
 
 RM:=rm
 RMFLAGS:=-rf
@@ -25,19 +24,18 @@ TARGET:=tarmux
 TARGETEXT:=.sh
 
 PREFIX?=/data/data/com.termux/files/usr
-INSTALL:=$(PREFIX)/bin
+LOCATION:=$(PREFIX)/bin
 
 build:
 	$(MKDIR) $(MKDIRFLAGS) $(BIN)
 	$(CP) $(CPFLAGS) $(SRC)/$(TARGET)$(TARGETEXT) $(BIN)/$(TARGET)$(BINEXT)
 	$(SHEBANG) $(SHEBANGFLAGS) $(BIN)/$(TARGET)$(BINEXT)
-	$(CHMOD) $(CHMODFLAGS) $(CHMODEXECUTABLE) $(BIN)/$(TARGET)$(BINEXT)
 
 install:
-	$(CP) $(CPFLAGS) $(BIN)/$(TARGET)$(BINEXT) $(INSTALL)
+	$(INSTALL) $(INSTALLFLAGS) $(BIN)/$(TARGET)$(BINEXT) $(LOCATION)
 
 uninstall:
-	$(RM) $(RMFLAGS) $(INSTALL)/$(TARGET)$(BINEXT)
+	$(RM) $(RMFLAGS) $(LOCATION)/$(TARGET)$(BINEXT)
 
 clean:
 	$(RM) $(RMFLAGS) $(BIN)
