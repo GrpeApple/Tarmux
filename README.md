@@ -205,9 +205,6 @@ You are to configure with `tarmux -c`.
 									<code>Always use pipes for backup</code>
 								</td>
 								<td>
-									<strong>
-										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
-									</strong><br>
 									When disabled, <code>tar</code> uses <code>-I</code> or <code>--use-compress-program=</code> to use such backup tool<br>
 									Otherwise, <code>tarmux</code> uses a pipe to backup.<br>
 									For example:
@@ -265,9 +262,6 @@ You are to configure with `tarmux -c`.
 									<code>Always use pipes for restore</code>
 								</td>
 								<td>
-									<strong>
-										WARNING: This is dangerous because it uses <code>eval</code> and can execute some very dangerous commands.
-									</strong><br>
 									When disabled, <code>tar</code> uses <code>-I</code> or <code>--use-compress-program=</code> to use such restore tool<br>
 									Otherwise, <code>tarmux</code> uses a pipe to restore.<br>
 									For example:
