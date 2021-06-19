@@ -1,4 +1,4 @@
-# `tarmux` [![0.4.5](https://img.shields.io/badge/version-v0.4.5-brightgreen)](https://github.com/GrpeApple/tarmux/releases/tag/v0.4.5)
+# `tarmux` [![0.4.5.1](https://img.shields.io/badge/version-v0.4.5.1-brightgreen)](https://github.com/GrpeApple/tarmux/releases/tag/v0.4.5.1)
 Tool to backup files on Termux with `tar`.
 
 *Please lowercase `tarmux` and format it as code if possible; if the first word is at the start of a sentence you may not lowercase. This is to avoid confusion with Termux and `tarmux`.*
