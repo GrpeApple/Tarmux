@@ -297,11 +297,11 @@ restore () {
 					'..',*|*,'..') cd .. || true; break 1;;
 					*,*)
 						filename="$(echo "${filename:-${REPLY}}" | xargs)" ### Trim whitespace
-						if test ! -d "./${filename}"; then
+						if test ! -d "${filename}"; then
 							restore_name="$(realpath "${filename}")"
 							break 2
 						else
-							cd "./${filename}" || true
+							cd "${filename}" || true
 							break 1
 						fi
 						;;
